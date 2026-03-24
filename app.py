@@ -3503,4 +3503,8 @@ if __name__ == '__main__':
     print("Feature: Light Personalization (3 quick choices)")
     print("Click 'It Continues' to see new content")
     # 开启 debug 模式以便查看详细错误
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # 本地开发环境入口
+    if __name__ == '__main__':
+        # 仅在本地开发环境运行调试服务器
+        # Vercel 部署时使用 WSGI 自动检测 app 对象
+        app.run(debug=True, host='0.0.0.0', port=5000)
