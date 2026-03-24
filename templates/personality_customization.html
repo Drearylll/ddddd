@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Go In - 人格定制</title>
+    <link rel="stylesheet" href="/static/css/goin_brand_v3.css">
+    <style>
+        body.app-mobile {
+            padding: 14px;
+        }
+        .phone {
+            max-width: 440px;
+            margin: 0 auto;
+            border-radius: var(--radius-xl);
+            background: #fff;
+            border: 1px solid var(--stroke-soft);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+        .content { padding: 16px; }
+        .title { font-size: 24px; margin: 0 0 8px; }
+        .subtitle { margin: 0 0 12px; color: var(--text-secondary); font-size: 14px; line-height: 1.55; }
+        .consent { display: flex; gap: 8px; margin-bottom: 12px; }
+        .pill {
+            flex: 1;
+            height: 38px;
+            border-radius: 10px;
+            border: 1px solid var(--stroke-soft);
+            background: #f8f8f7;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .pill.active {
+            background: #eefaf3;
+            color: #228b57;
+            border-color: #cdeeda;
+        }
+        .card {
+            border-radius: var(--radius-md);
+            border: 1px solid var(--stroke-soft);
+            background: #fff;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        .section-title { font-size: 15px; margin-bottom: 8px; }
+        .avatar-preview {
+            width: 110px;
+            height: 110px;
+            margin: 0 auto 8px;
+            border-radius: 999px;
+            background: var(--brand-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #fff;
+        }
+        .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .style-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 8px; }
+        .style {
+            height: 66px;
+            border-radius: 10px;
+            border: 1px solid var(--stroke-soft);
+            background: #fafaf9;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .style.active {
+            background: #eefaf3;
+            border-color: #cdeeda;
+            color: #228b57;
+        }
+        .row { display: flex; gap: 8px; margin-top: 8px; }
+        .btn {
+            flex: 1;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid var(--stroke-soft);
+            background: #fafaf9;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .btn.primary {
+            background: var(--brand-gradient);
+            color: #fff;
+            border: 0;
+        }
+        .btn.recording {
+            background: #ffeef2;
+            color: #b02b52;
+            border-color: #ffd4df;
+            animation: pulse 1s infinite;
+        }
+        .voice-toggle {
+            margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .switch {
+            width: 42px;
+            height: 24px;
+            border-radius: 14px;
+            background: #ececea;
+            position: relative;
+            cursor: pointer;
+        }
+        .switch::after {
+            content: "";
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            border-radius: 999px;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,.16);
+            transition: all .2s ease;
+        }
+        .switch.on {
+            background: #32c177;
+        }
+        .switch.on::after {
+            left: 21px;
+        }
+        .status {
+            min-height: 18px;
+            margin-top: 6px;
+            color: #228b57;
+            font-size: 12px;
+        }
+        .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+        @keyframes pulse {
+            0%,100% { box-shadow: 0 0 0 0 rgba(255,111,138,.3); }
+            50% { box-shadow: 0 0 0 10px rgba(255,111,138,0); }
+        }
+    </style>
+</head>
+<body class="app-mobile">
+    <div class="phone">
+        <div class="content g-fade-in">
+            <h1 class="title">为我赋形 · 赋声</h1>
+            <p class="subtitle">你希望为我设置形象和声音吗？点击 ✅ 后可进行 AI 形象生成和语音克隆，保存后自动进入主界面。</p>
+
+            <div class="consent">
+                <button class="pill active" id="acceptBtn" onclick="setConsent(true)">✅ 愿意设置</button>
+                <button class="pill" id="rejectBtn" onclick="setConsent(false)">稍后再说</button>
+            </div>
+
+            <section class="card" id="avatarCard">
+                <div class="section-title">AI 形象生成</div>
+                <div class="avatar-preview" id="avatarPreview">✨</div>
+                <input id="uploadInput" type="file" accept="image/*" style="display:none" onchange="loadAvatarImage(event)">
+                <div class="row">
+                    <button class="btn" onclick="document.getElementById('uploadInput').click()">上传头像</button>
+                    <button class="btn" onclick="generateIllustration()">生成插画</button>
+                </div>
+                <div class="style-grid">
+                    <button class="style active" data-style="chibi" onclick="selectStyle('chibi')"><span>🎨</span><span>Q版</span></button>
+                    <button class="style" data-style="human" onclick="selectStyle('human')"><span>👤</span><span>拟人</span></button>
+                    <button class="style" data-style="cyber" onclick="selectStyle('cyber')"><span>🤖</span><span>赛博</span></button>
+                </div>
+            </section>
+
+            <section class="card" id="voiceCard">
+                <div class="section-title">语音生成</div>
+                <div class="row">
+                    <button class="btn" id="recordBtn" onclick="toggleRecord()">录音</button>
+                    <button class="btn" onclick="cloneVoice()">克隆音色</button>
+                </div>
+                <div class="voice-toggle">
+                    <span>反转音色（保留/反转原声）</span>
+                    <div class="switch" id="reverseSwitch" onclick="toggleReverse()"></div>
+                </div>
+                <div class="status" id="statusText"></div>
+            </section>
+
+            <div class="actions">
+                <button class="btn" onclick="skipCustomization()">跳过</button>
+                <button class="btn primary" onclick="saveAndEnter()">保存并进入主界面</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/goin_brand_v3.js"></script>
+    <script>
+        let customizeEnabled = true;
+        let selectedStyle = 'chibi';
+        let isRecording = false;
+        let reverseVoice = false;
+
+        function setConsent(enable) {
+            customizeEnabled = enable;
+            document.getElementById('acceptBtn').classList.toggle('active', enable);
+            document.getElementById('rejectBtn').classList.toggle('active', !enable);
+            document.getElementById('avatarCard').style.opacity = enable ? '1' : '0.45';
+            document.getElementById('voiceCard').style.opacity = enable ? '1' : '0.45';
+        }
+
+        function selectStyle(style) {
+            selectedStyle = style;
+            const map = { chibi: '🎨', human: '👤', cyber: '🤖' };
+            document.getElementById('avatarPreview').innerHTML = map[style];
+            document.querySelectorAll('.style').forEach((btn) => btn.classList.remove('active'));
+            document.querySelector(`[data-style="${style}"]`).classList.add('active');
+            localStorage.setItem('goIn_avatar_style', style);
+        }
+
+        function loadAvatarImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                document.getElementById('avatarPreview').innerHTML = `<img src="${reader.result}" alt="avatar">`;
+                localStorage.setItem('goIn_avatar_uploaded', 'true');
+                localStorage.setItem('goIn_avatar_data_url', reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function generateIllustration() {
+            const preview = document.getElementById('avatarPreview');
+            preview.innerHTML = '...';
+            setTimeout(() => {
+                const styleMap = { chibi: '🧚', human: '🧑', cyber: '🦾' };
+                preview.innerHTML = styleMap[selectedStyle] || '✨';
+                updateStatus('已生成唯一插画预览（原型演示）');
+                GoInBrand.showToast('插画生成完成');
+                localStorage.setItem('goIn_avatar_generated', 'true');
+            }, 720);
+        }
+
+        function toggleRecord() {
+            isRecording = !isRecording;
+            const btn = document.getElementById('recordBtn');
+            if (isRecording) {
+                btn.classList.add('recording');
+                btn.textContent = '录音中...';
+                setTimeout(() => {
+                    if (!isRecording) return;
+                    isRecording = false;
+                    btn.classList.remove('recording');
+                    btn.textContent = '录音';
+                    localStorage.setItem('goIn_voice_recorded', 'true');
+                    updateStatus('录音完成，已保存语音样本');
+                    GoInBrand.showToast('录音完成');
+                }, 2200);
+            } else {
+                btn.classList.remove('recording');
+                btn.textContent = '录音';
+            }
+        }
+
+        function cloneVoice() {
+            updateStatus('正在克隆音色...');
+            setTimeout(() => {
+                localStorage.setItem('goIn_voice_cloned', 'true');
+                updateStatus('音色克隆完成');
+                GoInBrand.showToast('音色克隆完成');
+            }, 650);
+        }
+
+        function toggleReverse() {
+            reverseVoice = !reverseVoice;
+            document.getElementById('reverseSwitch').classList.toggle('on', reverseVoice);
+            localStorage.setItem('goIn_voice_reverse', reverseVoice ? 'true' : 'false');
+            updateStatus(reverseVoice ? '已启用反转音色' : '已保留原声');
+        }
+
+        function updateStatus(text) {
+            document.getElementById('statusText').textContent = text;
+        }
+
+        function skipCustomization() {
+            localStorage.setItem('goIn_personality_completed', 'true');
+            window.location.href = '/app_main';
+        }
+
+        function saveAndEnter() {
+            if (customizeEnabled) {
+                localStorage.setItem('goIn_avatar_style', selectedStyle);
+            }
+            localStorage.setItem('goIn_personality_completed', 'true');
+            window.location.href = '/app_main';
+        }
+    </script>
+</body>
+</html>

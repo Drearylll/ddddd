@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Go In - 主界面</title>
+    <link rel="stylesheet" href="/static/css/goin_brand_v3.css">
+    <style>
+        /* ========== 主界面布局 ========== */
+        .g-shell {
+            min-height: 100vh;
+            background: #f7f7f5;
+            padding-top: 64px;
+            padding-bottom: 76px;
+        }
+        
+        /* 内容区域 */
+        .main-content {
+            padding: 14px;
+            padding-bottom: 20px;
+        }
+        
+        /* Tab 面板动画 */
+        .tab-panel {
+            display: none;
+            animation: slideIn 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .tab-panel.active {
+            display: block;
+        }
+        
+        @keyframes slideIn {
+            from { 
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        /* 底部导航栏 */
+        .g-tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: #fff;
+            border-top: 1px solid var(--stroke-soft);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-bottom: env(safe-area-inset-bottom);
+            z-index: 100;
+        }
+        
+        .g-tab-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 8px 0;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .g-tab-item:active {
+            transform: scale(0.88);
+        }
+        
+        .g-tab-icon {
+            font-size: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .g-tab-item.active .g-tab-icon {
+            transform: translateY(-4px) scale(1.1);
+        }
+        
+        .g-tab-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            transition: all 0.25s ease;
+        }
+        
+        .g-tab-item.active .g-tab-label {
+            color: #20945c;
+            font-weight: 600;
+            transform: translateY(-1px);
+        }
+        
+        /* 激活指示器 */
+        .g-tab-indicator {
+            position: absolute;
+            bottom: 8px;
+            height: 3px;
+            width: 40px;
+            background: linear-gradient(90deg, #20945c, #2ec6a1);
+            border-radius: 2px;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* 卡片浮动效果 */
+        .card-hover {
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.1);
+        }
+        
+        /* 按钮波纹效果 */
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ripple::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.4);
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+        
+        .ripple:active::after {
+            width: 180px;
+            height: 180px;
+        }
+        
+        /* 点赞动画 */
+        .g-like-pop {
+            animation: likePop 0.32s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        @keyframes likePop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.4); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Hero 区块动画 */
+        .hero {
+            padding: 14px;
+            border-radius: 18px;
+            background: #141414;
+            color: #fff;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow-sm);
+            animation: fadeInDown 0.5s ease;
+        }
+        
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .hero h2 { margin: 0 0 6px; font-size: 20px; }
+        .hero p { margin: 0; color: #c8c8c8; font-size: 13px; line-height: 1.5; }
+        
+        /* 媒体框 */
+        .media-box {
+            height: 168px;
+            border-radius: 14px;
+            background: #f0f0ee;
+            border: 1px solid var(--stroke-soft);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        
+        /* 元信息 */
+        .meta {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-tertiary);
+            font-size: 12px;
+        }
+        
+        /* 行布局 */
+        .row {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .row > * { flex: 1; }
+        
+        /* 消息气泡 */
+        .msg {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 999px;
+            background: #e6f8ee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .bubble {
+            flex: 1;
+            background: #fff;
+            border: 1px solid var(--stroke-soft);
+            border-radius: 12px;
+            padding: 9px 10px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .me { background: #f2faf5; }
+        
+        /* 标签 */
+        .tag {
+            display: inline-flex;
+            border-radius: 999px;
+            padding: 4px 10px;
+            background: #eef8f2;
+            color: #20945c;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        
+        /* 隐藏类 */
+        .hidden { display: none !important; }
+        
+        /* Toast */
+        #gToast {
+            position: fixed;
+            bottom: 86px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 20, 20, 0.84);
+            color: #fff;
+            padding: 9px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            z-index: 40;
+        }
+        
+        /* 共创弹层 */
+        .co-create-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .co-create-modal.hidden {
+            display: none;
+        }
+        
+        .co-create-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .co-create-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .co-create-options {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .co-create-option {
+            padding: 16px;
+            border-radius: 12px;
+            border: 2px solid var(--stroke-soft);
+            background: #fafafa;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        
+        .co-create-option:hover {
+            border-color: #20945c;
+            background: #f0fdf4;
+            transform: translateY(-2px);
+        }
+        
+        .co-create-option.selected {
+            border-color: #20945c;
+            background: #eefaf3;
+        }
+        
+        .co-create-option-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .co-create-option-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .co-create-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .co-create-actions .btn {
+            flex: 0 0 auto;
+            padding: 10px 20px;
+        }
+        
+        /* 评论弹层 */
+        .comment-drawer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 2000;
+        }
+        
+        .comment-drawer.hidden {
+            display: none;
+        }
+        
+        .comment-drawer-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .comment-drawer-content {
+            position: relative;
+            background: #fff;
+            border-radius: 16px 16px 0 0;
+            max-height: 70vh;
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .comment-drawer-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--stroke-soft);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .comment-drawer-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .comment-drawer-header .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+        }
+        
+        .comment-drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+        }
+        
+        .comment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .comment-item {
+            display: flex;
+            gap: 12px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .comment-item:last-child {
+            border-bottom: none;
+        }
+        
+        .comment-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .comment-content {
+            flex: 1;
+        }
+        
+        .comment-author {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .comment-text {
+            font-size: 14px;
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+        
+        .comment-time {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 6px;
+        }
+        
+        .comment-drawer-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--stroke-soft);
+            display: flex;
+            gap: 10px;
+            background: #fafafa;
+            border-radius: 0 0 16px 16px;
+        }
+        
+        .comment-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid var(--stroke-soft);
+            border-radius: 20px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+        
+        .comment-input:focus {
+            border-color: #20945c;
+        }
+        
+        .comment-drawer-footer .btn {
+            padding: 10px 20px;
+            flex-shrink: 0;
+        }
+        
+        /* 分享弹层 */
+        .share-drawer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 2000;
+        }
+        
+        .share-drawer.hidden {
+            display: none;
+        }
+        
+        .share-drawer-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .share-drawer-content {
+            position: relative;
+            background: #fff;
+            border-radius: 16px 16px 0 0;
+            max-height: 60vh;
+            animation: slideUp 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        .share-drawer-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--stroke-soft);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .share-drawer-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .share-drawer-header .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+        }
+        
+        .share-drawer-body {
+            padding: 20px;
+        }
+        
+        .share-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .share-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 12px;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+        
+        .share-option:hover {
+            background: #f5f5f5;
+            transform: translateY(-2px);
+        }
+        
+        .share-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .share-icon.wechat { background: #07c160; color: white; }
+        .share-icon.weibo { background: #e6162d; color: white; }
+        .share-icon.qq { background: #12b7f5; color: white; }
+        .share-icon.link { background: #f0f0f0; color: #666; }
+        
+        .share-label {
+            font-size: 12px;
+            color: var(--text-primary);
+        }
+        
+        .share-tips {
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .share-tips p {
+            margin: 0;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body class="app-mobile">
+    <div class="g-shell g-fade-in">
+        <!-- 上导航栏 -->
+        <header class="g-topbar">
+            <div class="g-topbar-inner">
+                <button class="g-icon-btn" onclick="GoInBrand.showToast('设置开发中')">⚙️</button>
+                <div class="g-logo" style="display:flex; align-items:center; justify-content:center; gap:8px; width:90px;">
+                    <div id="goLogo" class="g-breathe" style="width:38px; height:38px; border-radius:12px; background: var(--brand-gradient); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:900;">Go</div>
+                </div>
+                <button class="g-icon-btn" onclick="GoInBrand.showToast('搜索开发中')">🔍</button>
+            </div>
+        </header>
+
+        <main class="g-content" id="gestureArea">
+            <!-- 看看 Tab -->
+            <section class="tab-panel active" id="tab-look">
+                <div class="hero g-breathe">
+                    <h2>看看</h2>
+                    <p>AI 生成的短篇小说、四格漫画、插画灵感</p>
+                </div>
+        
+                <div id="lookFeed">
+                    <!-- AI 短篇小说 -->
+                    <article class="g-card card-hover">
+                        <div class="media-box">📖</div>
+                        <div class="tag">AI 生成 · 短篇</div>
+                        <div class="g-subtitle">《夜色像纸一样折叠》：城市边缘的一盏灯，照见了两个人的秘密。</div>
+                        <div class="meta">
+                            <span>刚刚</span>
+                            <div style="display:flex; gap:8px;">
+                                <button class="g-btn-secondary ripple" onclick="toggleLike(this)"><span class="like-icon">🤍</span> <span class="like-count">132</span></button>
+                                <button class="g-btn-secondary ripple" onclick="openComment('look1')">💬 评论</button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <button class="g-btn-primary ripple" onclick="openCoCreate('look1')">共创</button>
+                            <button class="g-btn-secondary ripple" onclick="openShare('look1')">分享</button>
+                            <button class="g-btn-secondary ripple" onclick="generateMoreContent('novel')">生成更多</button>
+                        </div>
+                    </article>
+        
+                    <!-- AI 四格漫画 -->
+                    <article class="g-card card-hover">
+                        <div class="media-box">🖼️</div>
+                        <div class="tag">AI 生成 · 四格漫画</div>
+                        <div class="g-subtitle">"我把今天的坏情绪丢进了垃圾桶，结果它自己长出了花。"</div>
+                        <div class="meta">
+                            <span>3 分钟前</span>
+                            <div style="display:flex; gap:8px;">
+                                <button class="g-btn-secondary ripple" onclick="toggleLike(this)"><span class="like-icon">🤍</span> <span class="like-count">78</span></button>
+                                <button class="g-btn-secondary ripple" onclick="openComment('look2')">💬 评论</button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <button class="g-btn-primary ripple" onclick="openCoCreate('look2')">共创</button>
+                            <button class="g-btn-secondary ripple" onclick="openShare('look2')">分享</button>
+                            <button class="g-btn-secondary ripple" onclick="generateMoreContent('comic')">生成更多</button>
+                        </div>
+                    </article>
+                </div>
+            </section>
+        
+            <!-- In Tab -->
+            <section class="tab-panel" id="tab-in">
+                <div class="hero g-breathe">
+                    <h2>In</h2>
+                    <p>通讯信息流 · AI 代聊 · 消息管理</p>
+                </div>
+        
+                <article class="g-card card-hover">
+                    <div class="msg">
+                        <div class="avatar">🙂</div>
+                        <div class="bubble">（群聊）今晚几点集合？我可以代你回复，回看时一键保留/修改/删除/转述。</div>
+                    </div>
+                    <div class="msg">
+                        <div class="avatar">👤</div>
+                        <div class="bubble me">我先离线一会儿，帮我礼貌地回复下。</div>
+                    </div>
+                    <div class="row">
+                        <button class="g-btn-primary ripple" onclick="toggleAgentMode(true)">AI 代理</button>
+                        <button class="g-btn-secondary ripple" onclick="toggleAgentMode(false)">真人模式</button>
+                    </div>
+                </article>
+        
+                <article class="g-card card-hover">
+                    <div class="g-subtitle">通讯信息流（个人/群/公众号）</div>
+                    <div class="row">
+                        <button class="g-btn-secondary ripple" onclick="GoInBrand.showToast('进入个人聊天')">个人</button>
+                        <button class="g-btn-secondary ripple" onclick="GoInBrand.showToast('进入群聊')">群</button>
+                        <button class="g-btn-secondary ripple" onclick="GoInBrand.showToast('进入公众号')">公众号</button>
+                    </div>
+                    <div style="height:10px;"></div>
+                    <div class="g-subtitle">代聊记录操作</div>
+                    <div class="row">
+                        <button class="g-btn-secondary ripple" onclick="GoInBrand.showToast('已保留')">保留</button>
+                        <button class="g-btn-secondary ripple" onclick="GoInBrand.showToast('已进入修改')">修改</button>
+                        <button class="g-btn-secondary ripple" onclick="GoInBrand.showToast('已删除')">删除</button>
+                        <button class="g-btn-secondary ripple" onclick="GoInBrand.showToast('已转述')">转述</button>
+                    </div>
+                </article>
+            </section>
+        
+            <!-- 逛逛 Tab -->
+            <section class="tab-panel" id="tab-stroll">
+                <div class="hero g-breathe">
+                    <h2>逛逛</h2>
+                    <p>AI 自动打卡 · 真实地点 · 你的生活轨迹</p>
+                </div>
+        
+                <div id="strollFeed">
+                    <!-- AI 朋友圈内容将由 JS 动态生成 -->
+                </div>
+            </section>
+        </main>
+        
+        <!-- 底部导航栏 -->
+        <nav class="g-tab-bar">
+            <div class="g-tab-item active" onclick="switchTab('look', this)" style="position: relative;">
+                <div class="g-tab-icon">👀</div>
+                <div class="g-tab-label">看看</div>
+            </div>
+            <div class="g-tab-item" onclick="switchTab('in', this)" style="position: relative;">
+                <div class="g-tab-icon">🟢</div>
+                <div class="g-tab-label">In</div>
+            </div>
+            <div class="g-tab-item" onclick="switchTab('stroll', this)" style="position: relative;">
+                <div class="g-tab-icon">🚶</div>
+                <div class="g-tab-label">逛逛</div>
+            </div>
+            <div class="g-tab-indicator" id="tabIndicator"></div>
+        </nav>
+
+        <div id="gToast" class="hidden"></div>
+        
+        <!-- 共创弹层 -->
+        <div id="coCreateModal" class="co-create-modal hidden">
+            <div class="co-create-card">
+                <div class="co-create-title">
+                    <span>🎨</span>
+                    选择共创模式
+                </div>
+                <div class="co-create-options">
+                    <div class="co-create-option" onclick="selectCoCreateOption(1)">
+                        <div class="co-create-option-title">✍️ 接力</div>
+                        <div class="co-create-option-desc">续写故事/续画漫画，延续原作风格</div>
+                    </div>
+                    <div class="co-create-option" onclick="selectCoCreateOption(2)">
+                        <div class="co-create-option-title">🏆 夺擂</div>
+                        <div class="co-create-option-desc">按新要求创作，挑战不同风格</div>
+                    </div>
+                </div>
+                <div class="co-create-actions">
+                    <button class="btn" onclick="closeCoCreateModal()">取消</button>
+                    <button class="btn primary" onclick="confirmCoCreate()">确定</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 评论弹层 -->
+        <div id="commentDrawer" class="comment-drawer hidden">
+            <div class="comment-drawer-overlay" onclick="closeCommentDrawer()"></div>
+            <div class="comment-drawer-content">
+                <div class="comment-drawer-header">
+                    <h3>💬 评论</h3>
+                    <button class="close-btn" onclick="closeCommentDrawer()">✕</button>
+                </div>
+                <div class="comment-drawer-body">
+                    <!-- 评论列表 -->
+                    <div id="commentList" class="comment-list">
+                        <!-- 评论将动态加载到这里 -->
+                    </div>
+                </div>
+                <div class="comment-drawer-footer">
+                    <input type="text" id="commentInput" class="comment-input" placeholder="写下你的评论..." maxlength="200">
+                    <button class="btn primary" onclick="submitComment()">发送</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 分享弹层 -->
+        <div id="shareDrawer" class="share-drawer hidden">
+            <div class="share-drawer-overlay" onclick="closeShareDrawer()"></div>
+            <div class="share-drawer-content">
+                <div class="share-drawer-header">
+                    <h3>📤 分享</h3>
+                    <button class="close-btn" onclick="closeShareDrawer()">✕</button>
+                </div>
+                <div class="share-drawer-body">
+                    <div class="share-options">
+                        <div class="share-option" onclick="shareToWechat()">
+                            <div class="share-icon wechat">💬</div>
+                            <div class="share-label">微信</div>
+                        </div>
+                        <div class="share-option" onclick="shareToWeibo()">
+                            <div class="share-icon weibo">🔴</div>
+                            <div class="share-label">微博</div>
+                        </div>
+                        <div class="share-option" onclick="shareToQQ()">
+                            <div class="share-icon qq">🐧</div>
+                            <div class="share-label">QQ</div>
+                        </div>
+                        <div class="share-option" onclick="copyLink()">
+                            <div class="share-icon link">🔗</div>
+                            <div class="share-label">复制链接</div>
+                        </div>
+                    </div>
+                    <div class="share-tips">
+                        <p>💡 分享内容将生成精美海报，包含地点、文案和 AI 形象</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/goin_brand_v3.js"></script>
+    <script>
+        // 页面首屏加载占位，模拟内容拉取过渡
+        window.addEventListener("load", function () {
+            GoInBrand.setLoading("loadingSkeleton", 420);
+            hydrateUserFace();
+            autoGenerateStroll();
+        });
+
+        function hydrateUserFace() {
+            const faceAvatar = localStorage.getItem('goIn_face_avatar');
+            if (faceAvatar) {
+                const el = document.getElementById('inAvatar1');
+                if (!el) return;
+                el.style.background = '#fff';
+                el.style.border = '1px solid var(--stroke-soft)';
+                el.style.overflow = 'hidden';
+                el.textContent = '';
+                el.innerHTML = `<img src="${faceAvatar}" alt="face" style="width:100%;height:100%;object-fit:cover">`;
+            }
+        }
+
+        async function toggleAgentModeMini(enable) {
+            try {
+                await fetch('/api/toggle_agent_mode', { method: 'POST', headers: { 'Content-Type': 'application/json' }});
+            } catch (e) {}
+            GoInBrand.showToast(enable ? '已切到 AI 代理模式' : '已切到真人模式');
+        }
+
+        // ========== 已废弃：使用模态框版本替代 ==========
+        // function openCoCreate(contentId) {
+        //     const contentMap = {
+        //         'look1': { title: '夜色像纸一样折叠', content: '城市边缘的一盏灯，照见了两个人的秘密。' },
+        //         'look2': { title: '坏情绪垃圾桶', content: '我把今天的坏情绪丢进了垃圾桶，结果它自己长出了花。' }
+        //     };
+        //     const currentContent = contentMap[contentId] || { title: '未知', content: '内容' };
+        //     localStorage.setItem('co_create_content_id', contentId);
+        //     localStorage.setItem('co_create_title', currentContent.title);
+        //     localStorage.setItem('co_create_content', currentContent.content);
+        //     const mode = prompt('选择共创模式：\n1) 接力（续写/续画）\n2) 夺擂（按要求创作）\n\n输入 1 或 2');
+        //     if (!mode) return;
+        //     localStorage.setItem('co_create_mode', mode.trim() === '1' ? 'relay' : 'challenge');
+        //     window.location.href = '/co_create';
+        // }
+        // ================================================
+
+        function generateMoreContent(contentType) {
+            // 生成更多内容
+            const typeMap = {
+                'novel': '短篇小说',
+                'comic': '四格漫画',
+                'moments': '朋友圈'
+            };
+            
+            GoInBrand.showToast(`正在生成新的${typeMap[contentType] || '内容'}...`);
+            
+            // 调用 API 生成
+            fetch('/api/generate_more_content', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: contentType,
+                    location: '附近咖啡店',
+                    mood: '日常'
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    GoInBrand.showToast('✨ 生成成功！');
+                    // TODO: 将新内容添加到列表中
+                } else {
+                    GoInBrand.showToast('生成失败，请重试');
+                }
+            })
+            .catch(err => {
+                console.error('生成失败:', err);
+                GoInBrand.showToast('生成失败，请重试');
+            });
+        }
+
+        async function autoGenerateStroll() {
+            // 自动生成：无需用户点击
+            const feed = document.getElementById('strollFeed');
+            if (!feed) return;
+            feed.innerHTML = '';
+
+            const faceAvatar = localStorage.getItem('goIn_face_avatar');
+            const gender = localStorage.getItem('goIn_gender') || 'other';
+
+            function renderCard(item) {
+                const poseEmoji = item.pose_emoji || '📸';
+                const place = item.place || '未知地点';
+                const text = item.text || '今天也要好好生活。';
+                const area = item.area || '附近';
+                const time = item.time || '刚刚';
+                const likeId = item.like_id || ('stroll_' + Math.random().toString(16).slice(2));
+                const face = faceAvatar
+                    ? `<div style="width:44px;height:44px;border-radius:999px;overflow:hidden;border:1px solid var(--stroke-soft);background:#fff;"><img src="${faceAvatar}" style="width:100%;height:100%;object-fit:cover" alt="face"></div>`
+                    : `<div style="width:44px;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:#eefaf3;color:#1f8a56;">🙂</div>`;
+
+                const media = `
+                    <div class="media-box" style="position:relative; height:188px;">
+                        <div style="position:absolute; inset:0; background: linear-gradient(135deg, rgba(20,201,106,0.12), rgba(57,199,255,0.12));"></div>
+                        <div style="position:absolute; left:12px; top:12px; display:flex; gap:10px; align-items:center;">
+                            ${face}
+                            <div>
+                                <div style="font-size:13px; color: var(--text-primary); font-weight:600;">你的 AI 形象</div>
+                                <div style="font-size:12px; color: var(--text-tertiary);">姿势：${poseEmoji} · 性别：${gender}</div>
+                            </div>
+                        </div>
+                        <div style="position:absolute; right:12px; bottom:12px; font-size:46px;">${poseEmoji}</div>
+                    </div>
+                `;
+
+                return `
+                    <article class="g-card">
+                        ${media}
+                        <div class="tag">AI 自动打卡 · 实际地点</div>
+                        <div class="g-subtitle"><b>${place}</b> · ${area}<br>${text}</div>
+                        <div class="meta">
+                            <span>${time}</span>
+                            <div style="display:flex; gap:8px;">
+                                <button class="g-btn-secondary" data-like-id="${likeId}"><span class="like-icon">🤍</span> <span class="like-count">${item.likes || 12}</span></button>
+                                <button class="g-btn-secondary" onclick="openComment('${likeId}')">💬 评论</button>
+                                <button class="g-btn-secondary" onclick="openShare('${likeId}')">分享</button>
+                            </div>
+                        </div>
+                    </article>
+                `;
+            }
+
+            // 骨架
+            feed.innerHTML = `
+                <div class="g-card">
+                    <div class="g-skeleton" style="width:55%; margin-bottom:8px;"></div>
+                    <div class="g-skeleton" style="width:100%; margin-bottom:6px;"></div>
+                    <div class="g-skeleton" style="width:80%;"></div>
+                </div>
+            `;
+
+            // 定位
+            let pos = null;
+            try {
+                pos = await new Promise((resolve) => {
+                    if (!navigator.geolocation) return resolve(null);
+                    navigator.geolocation.getCurrentPosition(
+                        (p) => resolve({ lat: p.coords.latitude, lon: p.coords.longitude }),
+                        () => resolve(null),
+                        { enableHighAccuracy: false, timeout: 1800, maximumAge: 60000 }
+                    );
+                });
+            } catch (e) {}
+
+            let items = [];
+            try {
+                const url = pos ? `/api/stroll_feed?lat=${encodeURIComponent(pos.lat)}&lon=${encodeURIComponent(pos.lon)}` : '/api/stroll_feed';
+                const res = await fetch(url);
+                const data = await res.json();
+                items = (data && data.items) ? data.items : [];
+            } catch (e) {}
+
+            if (!items.length) {
+                items = [
+                    { place: '附近咖啡馆', area: '步行 8 分钟', pose_emoji: '☕', text: '一杯咖啡把今天慢下来。', likes: 21, time: '刚刚' },
+                    { place: '城市公园跑道', area: '附近', pose_emoji: '🏃', text: '心跳和风都很诚实。', likes: 14, time: '3分钟前' },
+                    { place: '街角书店', area: '附近', pose_emoji: '📚', text: '翻到那一页的时候，世界安静了。', likes: 9, time: '7分钟前' }
+                ];
+            }
+
+            feed.innerHTML = items.map(renderCard).join('');
+
+            // 为动态插入内容补一轮点赞绑定（避免重复绑定）
+            document.querySelectorAll("[data-like-id]").forEach((btn) => {
+                if (btn.__bound_like__) return;
+                btn.__bound_like__ = true;
+                btn.addEventListener("click", function () {
+                    const icon = btn.querySelector(".like-icon");
+                    const text = btn.querySelector(".like-count");
+                    const current = parseInt(text.textContent, 10) || 0;
+                    const liked = icon.textContent !== "❤️";
+                    text.textContent = liked ? current + 1 : Math.max(0, current - 1);
+                    icon.textContent = liked ? "❤️" : "🤍";
+                    icon.classList.add("g-like-pop");
+                    setTimeout(() => icon.classList.remove("g-like-pop"), 320);
+                });
+            });
+        }
+        
+        // ========== Tab 切换逻辑 ==========
+        let currentTab = 'look';
+        
+        function switchTab(tabName, tabElement) {
+            // 更新当前 Tab
+            currentTab = tabName;
+            
+            // 移除所有 Tab 的 active 状态
+            document.querySelectorAll('.g-tab-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // 添加当前 Tab 的 active 状态
+            if (tabElement) {
+                tabElement.classList.add('active');
+            }
+            
+            // 隐藏所有 Tab 面板
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            // 显示当前 Tab 面板
+            const targetPanel = document.getElementById('tab-' + tabName);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+            
+            // 更新指示器位置
+            updateTabIndicator(tabElement);
+            
+            // 如果切换到逛逛 Tab，自动生成内容
+            if (tabName === 'stroll') {
+                autoGenerateStroll();
+            }
+            
+            console.log('切换到 Tab:', tabName);
+        }
+        
+        function updateTabIndicator(tabElement) {
+            const indicator = document.getElementById('tabIndicator');
+            if (!indicator || !tabElement) return;
+            
+            const index = Array.from(tabElement.parentNode.children).indexOf(tabElement);
+            const offset = index * (100 / 3);
+            indicator.style.transform = `translateX(${offset}%)`;
+        }
+        
+        // ========== 点赞功能 ==========
+        function toggleLike(btn) {
+            const icon = btn.querySelector('.like-icon');
+            const countEl = btn.querySelector('.like-count');
+            let count = parseInt(countEl.textContent) || 0;
+            
+            if (icon.textContent === '🤍') {
+                icon.textContent = '❤️';
+                countEl.textContent = count + 1;
+                btn.style.color = '#e74c3c';
+                GoInBrand.showToast('已点赞');
+            } else {
+                icon.textContent = '🤍';
+                countEl.textContent = count - 1;
+                btn.style.color = '';
+            }
+        }
+        
+        // ========== 评论功能 ==========
+        function openComment(contentId) {
+            GoInBrand.showToast('评论功能开发中');
+        }
+        
+        // ========== AI 代理模式 ==========
+        function toggleAgentMode(enable) {
+            GoInBrand.showToast(enable ? '已切到 AI 代理模式' : '已切到真人模式');
+        }
+        
+        // ========== 共创功能 ==========
+        let selectedCoCreateMode = null;
+        let currentContentId = null;
+        
+        function openCoCreate(contentId) {
+            currentContentId = contentId;
+            selectedCoCreateMode = null;
+            const modal = document.getElementById('coCreateModal');
+            modal.classList.remove('hidden');
+            
+            // 重置选项样式
+            document.querySelectorAll('.co-create-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+        }
+        
+        function selectCoCreateOption(mode) {
+            selectedCoCreateMode = mode;
+            
+            // 更新选项样式
+            document.querySelectorAll('.co-create-option').forEach((opt, index) => {
+                if (index + 1 === mode) {
+                    opt.classList.add('selected');
+                } else {
+                    opt.classList.remove('selected');
+                }
+            });
+        }
+        
+        function closeCoCreateModal() {
+            const modal = document.getElementById('coCreateModal');
+            modal.classList.add('hidden');
+        }
+        
+        function confirmCoCreate() {
+            if (!selectedCoCreateMode) {
+                GoInBrand.showToast('请选择共创模式');
+                return;
+            }
+            
+            // 获取当前内容
+            const contentMap = {
+                'look1': { title: '夜色像纸一样折叠', content: '城市边缘的一盏灯，照见了两个人的秘密。' },
+                'look2': { title: '坏情绪垃圾桶', content: '我把今天的坏情绪丢进了垃圾桶，结果它自己长出了花。' }
+            };
+            
+            const currentContent = contentMap[currentContentId] || { title: '未知', content: '内容' };
+            
+            // 存储共创信息到 localStorage
+            localStorage.setItem('co_create_content_id', currentContentId);
+            localStorage.setItem('co_create_title', currentContent.title);
+            localStorage.setItem('co_create_content', currentContent.content);
+            localStorage.setItem('co_create_mode', selectedCoCreateMode === 1 ? 'relay' : 'challenge');
+            
+            closeCoCreateModal();
+            
+            // 以弹窗方式打开共创页面（关键：使用 window.open）
+            const coCreateWindow = window.open('/co_create', '共创空间', 'width=800,height=700,left=' + (window.screen.width - 800) / 2 + ',top=' + (window.screen.height - 700) / 2);
+            
+            if (!coCreateWindow) {
+                GoInBrand.showToast('请允许打开弹窗');
+                // 如果弹窗被拦截，则直接跳转
+                window.location.href = '/co_create';
+            } else {
+                console.log('✅ 共创空间已打开:', coCreateWindow);
+            }
+        }
+        
+        // ========== 评论功能 ==========
+        let currentCommentPostId = null;
+        
+        function openComment(postId) {
+            currentCommentPostId = postId;
+            const drawer = document.getElementById('commentDrawer');
+            drawer.classList.remove('hidden');
+            
+            // 加载评论列表（模拟数据）
+            loadComments(postId);
+            
+            console.log('打开评论:', postId);
+        }
+        
+        function closeCommentDrawer() {
+            const drawer = document.getElementById('commentDrawer');
+            drawer.classList.add('hidden');
+        }
+        
+        function loadComments(postId) {
+            const commentList = document.getElementById('commentList');
+            
+            // 模拟评论数据
+            const mockComments = [
+                {
+                    id: 1,
+                    author: "小明",
+                    avatar: "👦",
+                    content: "写得太好了！很有共鸣",
+                    time: "10 分钟前"
+                },
+                {
+                    id: 2,
+                    author: "小红",
+                    avatar: "👧",
+                    content: "这个地方我也去过，真的很不错~",
+                    time: "25 分钟前"
+                },
+                {
+                    id: 3,
+                    author: "阿强",
+                    avatar: "👨",
+                    content: "AI 生成的吗？太厉害了吧",
+                    time: "1 小时前"
+                }
+            ];
+            
+            // 渲染评论
+            commentList.innerHTML = mockComments.map(comment => `
+                <div class="comment-item">
+                    <div class="comment-avatar">${comment.avatar}</div>
+                    <div class="comment-content">
+                        <div class="comment-author">${comment.author}</div>
+                        <div class="comment-text">${comment.content}</div>
+                        <div class="comment-time">${comment.time}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function submitComment() {
+            const input = document.getElementById('commentInput');
+            const content = input.value.trim();
+            
+            if (!content) {
+                GoInBrand.showToast('请输入评论内容');
+                return;
+            }
+            
+            if (!currentCommentPostId) {
+                GoInBrand.showToast('评论失败，请重试');
+                return;
+            }
+            
+            // 添加评论到列表（模拟）
+            const commentList = document.getElementById('commentList');
+            const newComment = {
+                id: Date.now(),
+                author: "我",
+                avatar: "🙋",
+                content: content,
+                time: "刚刚"
+            };
+            
+            const commentHTML = `
+                <div class="comment-item">
+                    <div class="comment-avatar">${newComment.avatar}</div>
+                    <div class="comment-content">
+                        <div class="comment-author">${newComment.author}</div>
+                        <div class="comment-text">${newComment.content}</div>
+                        <div class="comment-time">${newComment.time}</div>
+                    </div>
+                </div>
+            `;
+            
+            commentList.insertAdjacentHTML('beforeend', commentHTML);
+            input.value = '';
+            
+            GoInBrand.showToast('评论成功');
+            
+            // 这里可以调用真实的评论 API
+            console.log('提交评论:', currentCommentPostId, content);
+        }
+        
+        // 支持回车发送评论
+        document.addEventListener('DOMContentLoaded', function() {
+            const commentInput = document.getElementById('commentInput');
+            if (commentInput) {
+                commentInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        submitComment();
+                    }
+                });
+            }
+        });
+        
+        // ========== 分享功能 ==========
+        let currentSharePostId = null;
+        
+        function openShare(postId) {
+            currentSharePostId = postId;
+            const drawer = document.getElementById('shareDrawer');
+            drawer.classList.remove('hidden');
+            
+            console.log('打开分享:', postId);
+        }
+        
+        function closeShareDrawer() {
+            const drawer = document.getElementById('shareDrawer');
+            drawer.classList.add('hidden');
+        }
+        
+        function shareToWechat() {
+            closeShareDrawer();
+            GoInBrand.showToast('已生成分享海报，可发送到微信');
+            console.log('分享到微信:', currentSharePostId);
+            // 后续可实现：生成海报图片，调用微信分享 API
+        }
+        
+        function shareToWeibo() {
+            closeShareDrawer();
+            GoInBrand.showToast('已生成分享海报，可发送到微博');
+            console.log('分享到微博:', currentSharePostId);
+            // 后续可实现：生成海报图片，调用微博分享 API
+        }
+        
+        function shareToQQ() {
+            closeShareDrawer();
+            GoInBrand.showToast('已生成分享海报，可发送到 QQ');
+            console.log('分享到 QQ:', currentSharePostId);
+            // 后续可实现：生成海报图片，调用 QQ 分享 API
+        }
+        
+        function copyLink() {
+            closeShareDrawer();
+            
+            // 复制链接到剪贴板
+            const dummyLink = `https://goin.app/post/${currentSharePostId}`;
+            navigator.clipboard.writeText(dummyLink).then(() => {
+                GoInBrand.showToast('链接已复制');
+            }).catch(() => {
+                GoInBrand.showToast('复制失败，请重试');
+            });
+            
+            console.log('复制链接:', dummyLink);
+        }
+        
+        // ========== 页面初始化 ==========
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('主界面加载完成');
+            
+            // 初始化指示器位置
+            const firstTab = document.querySelector('.g-tab-item.active');
+            if (firstTab) {
+                updateTabIndicator(firstTab);
+            }
+            
+            // 监听共创空间发布的内容
+            const coCreateChannel = new BroadcastChannel('go_in_co_create');
+            console.log('📡 BroadcastChannel 已创建');
+            
+            coCreateChannel.onmessage = function(event) {
+                console.log('📨 收到 BroadcastChannel 消息');
+                console.log('   event.data:', JSON.stringify(event.data, null, 2));
+                
+                if (event.data && event.data.type === 'co_create_published') {
+                    console.log('✅ 收到共创发布内容:', event.data.data);
+                    addCoCreateToFeed(event.data.data);
+                    switchTab('stroll');
+                    console.log('✅ 已切换到看看 Tab');
+                    
+                    // 发送确认
+                    coCreateChannel.postMessage({type: 'ack'});
+                } else {
+                    console.log('⚠️ BroadcastChannel 消息类型不匹配:', event.data ? event.data.type : 'no data');
+                }
+            };
+            console.log('✅ BroadcastChannel 监听器已注册');
+            
+            // 备选方案：监听 postMessage
+            window.addEventListener('message', function(event) {
+                console.log('📨 收到 postMessage 事件');
+                console.log('   event.origin:', event.origin);
+                console.log('   event.data:', JSON.stringify(event.data, null, 2));
+                
+                if (event.data && event.data.type === 'co_create_published') {
+                    console.log('✅ 收到 postMessage 共创发布内容:', event.data.data);
+                    addCoCreateToFeed(event.data.data);
+                    switchTab('stroll');
+                    console.log('✅ 已切换到看看 Tab');
+                } else {
+                    console.log('⚠️ postMessage 类型不匹配:', event.data ? event.data.type : 'no data');
+                }
+            });
+            console.log('✅ postMessage 监听器已注册');
+            
+            // 备选方案：监听 localStorage 变化
+            window.addEventListener('storage', function(event) {
+                if (event.key === 'co_create_published_data') {
+                    console.log('📦 检测到 localStorage 变化:', event.key);
+                    try {
+                        const data = JSON.parse(event.newValue);
+                        console.log('✅ 从 localStorage 恢复发布内容:', data);
+                        addCoCreateToFeed(data);
+                        switchTab('stroll');
+                        // 清除标记
+                        localStorage.removeItem('co_create_published_data');
+                        localStorage.removeItem('co_create_published_time');
+                    } catch (e) {
+                        console.error('❌ 解析 localStorage 数据失败:', e);
+                    }
+                }
+            });
+            
+            // 页面加载时检查是否有未处理的发布
+            const publishedData = localStorage.getItem('co_create_published_data');
+            if (publishedData) {
+                console.log('📦 发现未处理的发布数据');
+                try {
+                    const data = JSON.parse(publishedData);
+                    console.log('✅ 从 localStorage 恢复数据:', data);
+                    addCoCreateToFeed(data);
+                    switchTab('stroll');
+                    localStorage.removeItem('co_create_published_data');
+                    localStorage.removeItem('co_create_published_time');
+                } catch (e) {
+                    console.error('❌ 解析失败:', e);
+                }
+            }
+            
+            // 添加全局强制同步函数
+            window.forceSyncFromLocalStorage = function() {
+                console.log('🔄 强制同步按钮被点击');
+                const publishedData = localStorage.getItem('co_create_published_data');
+                if (publishedData) {
+                    try {
+                        const data = JSON.parse(publishedData);
+                        console.log('✅ 从 localStorage 恢复数据:', data);
+                        addCoCreateToFeed(data);
+                        switchTab('stroll');
+                        localStorage.removeItem('co_create_published_data');
+                        localStorage.removeItem('co_create_published_time');
+                        alert('✅ 同步成功！\n\n已添加共创内容到看看页面');
+                    } catch (e) {
+                        console.error('❌ 解析失败:', e);
+                        alert('❌ 同步失败：' + e.message);
+                    }
+                } else {
+                    alert('ℹ️ 没有找到未同步的共创内容\n\n请确保：\n1. 从主界面点击“共创”按钮打开弹窗\n2. 在弹窗中生成并发布内容\n3. 等待 2 秒后自动同步');
+                }
+            };
+            console.log('✅ forceSyncFromLocalStorage 函数已注册');
+        });
+        
+        // 添加共创内容到看看页面
+        function addCoCreateToFeed(publishData) {
+            const strollFeed = document.getElementById('strollFeed');
+            if (!strollFeed) return;
+            
+            const faceAvatar = localStorage.getItem('goIn_face_avatar');
+            const gender = localStorage.getItem('goIn_gender') || 'other';
+            const likeId = 'co_' + Date.now();
+            
+            // 构建卡片 HTML
+            let mediaHtml = '';
+            if (publishData.image_url) {
+                mediaHtml = `
+                    <div class="media-box" style="position:relative; height:280px; overflow:hidden; border-radius:16px; margin-bottom:16px;">
+                        <img src="${publishData.image_url}" style="width:100%; height:100%; object-fit:cover;" alt="共创图片">
+                    </div>
+                `;
+            } else {
+                const poseEmoji = gender === 'male' ? '📝' : '☕';
+                mediaHtml = `
+                    <div class="media-box" style="position:relative; height:188px;">
+                        <div style="position:absolute; inset:0; background: linear-gradient(135deg, rgba(20,201,106,0.12), rgba(57,199,255,0.12));"></div>
+                        <div style="position:absolute; left:12px; top:12px; display:flex; gap:10px; align-items:center;">
+                            ${faceAvatar ? `<div style="width:44px;height:44px;border-radius:999px;overflow:hidden;border:1px solid var(--stroke-soft);background:#fff;"><img src="${faceAvatar}" style="width:100%;height:100%;object-fit:cover" alt="face"></div>` : `<div style="width:44px;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:#eefaf3;color:#1f8a56;">🙂</div>`}
+                            <div>
+                                <div style="font-size:13px; color: var(--text-primary); font-weight:600;">共创作品</div>
+                                <div style="font-size:12px; color: var(--text-tertiary);">类型：${publishData.content_type}</div>
+                            </div>
+                        </div>
+                        <div style="position:absolute; right:12px; bottom:12px; font-size:46px;">${poseEmoji}</div>
+                    </div>
+                `;
+            }
+            
+            const cardHtml = `
+                <article class="g-card" style="animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);">
+                    ${mediaHtml}
+                    <div class="tag">AI 共创 · ${publishData.content_type === 'comic' ? '漫画脚本' : '微小说'}</div>
+                    <div class="g-subtitle"><b>${publishData.title}</b><br>${publishData.content.substring(0, 100)}${publishData.content.length > 100 ? '...' : ''}</div>
+                    <div class="meta">
+                        <span>刚刚</span>
+                        <div style="display:flex; gap:8px;">
+                            <button class="g-btn-secondary" data-like-id="${likeId}" onclick="handleLike(this)"><span class="like-icon"></span> <span class="like-count">0</span></button>
+                            <button class="g-btn-secondary" onclick="openComment('${likeId}')">💬 评论</button>
+                            <button class="g-btn-secondary" onclick="openShare('${likeId}')">分享</button>
+                        </div>
+                    </div>
+                </article>
+            `;
+            
+            // 插入到顶部
+            strollFeed.insertAdjacentHTML('afterbegin', cardHtml);
+            
+            GoInBrand.showToast('✨ 新内容已添加到顶部');
+        }
+    </script>
+</body>
+</html>

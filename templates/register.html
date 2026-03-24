@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go In - 注册</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo img {
+            max-width: 120px;
+            margin-bottom: 10px;
+        }
+        
+        .logo h1 {
+            color: #7B57D6;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #7B57D6;
+            box-shadow: 0 0 0 3px rgba(123, 87, 214, 0.1);
+        }
+        
+        .gender-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .gender-option {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .gender-option:hover {
+            border-color: #7B57D6;
+            transform: translateY(-2px);
+        }
+        
+        .gender-option.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+        
+        .gender-option .icon {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+        
+        .upload-area {
+            border: 2px dashed #e0e0e0;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .upload-area:hover {
+            border-color: #7B57D6;
+            background: rgba(123, 87, 214, 0.05);
+        }
+        
+        .upload-area.has-image {
+            border-style: solid;
+            border-color: #7B57D6;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: #ccc;
+            margin-bottom: 10px;
+        }
+        
+        .preview-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 10px;
+            display: none;
+            margin: 0 auto;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            color: #999;
+            font-size: 14px;
+        }
+        
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .login-link a {
+            color: #7B57D6;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h1>Go In</h1>
+            <p style="color: #999;">一个会自己发生的世界</p>
+        </div>
+        
+        <div class="error-message" id="errorMessage"></div>
+        
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" name="username" required placeholder="请输入用户名">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" name="password" required placeholder="请输入密码" minlength="6">
+            </div>
+            
+            <div class="form-group">
+                <label>性别</label>
+                <div class="gender-selector">
+                    <div class="gender-option" data-gender="male" onclick="selectGender('male')">
+                        <div class="icon">👦</div>
+                        <div>男生</div>
+                    </div>
+                    <div class="gender-option" data-gender="female" onclick="selectGender('female')">
+                        <div class="icon">👧</div>
+                        <div>女生</div>
+                    </div>
+                </div>
+                <input type="hidden" id="gender" name="gender" required>
+            </div>
+            
+            <div class="form-group">
+                <label>上传照片（用于生成头像）</label>
+                <div class="upload-area" id="uploadArea" onclick="document.getElementById('photoInput').click()">
+                    <div class="upload-icon">📷</div>
+                    <div id="uploadText">点击上传照片</div>
+                    <img id="previewImage" class="preview-image" alt="预览">
+                </div>
+                <input type="file" id="photoInput" accept="image/*" style="display: none;" onchange="handlePhotoSelect(event)">
+            </div>
+            
+            <button type="submit" class="btn" id="submitBtn">
+                开始创作我的头像
+            </button>
+        </form>
+        
+        <div class="divider">已有账号？</div>
+        
+        <div class="login-link">
+            <a href="/auth">立即登录</a>
+        </div>
+    </div>
+    
+    <script>
+        let selectedPhoto = null;
+        
+        function selectGender(gender) {
+            document.querySelectorAll('.gender-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            document.querySelector(`[data-gender="${gender}"]`).classList.add('selected');
+            document.getElementById('gender').value = gender;
+        }
+        
+        function handlePhotoSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            selectedPhoto = file;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById('previewImage');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                
+                document.getElementById('uploadText').textContent = '已选择照片';
+                document.getElementById('uploadArea').classList.add('has-image');
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const gender = document.getElementById('gender').value;
+            
+            if (!username || !password || !gender) {
+                showError('请填写所有必填项');
+                return;
+            }
+            
+            if (!selectedPhoto) {
+                showError('请上传照片用于生成头像');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('password', password);
+            formData.append('gender', gender);
+            formData.append('photo', selectedPhoto);
+            
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> 正在生成头像...';
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 保存用户信息到 localStorage
+                    localStorage.setItem('user_id', data.user.user_id);
+                    localStorage.setItem('username', data.user.username);
+                    localStorage.setItem('avatar_image', data.user.avatar_image);
+                    
+                    // 统一跳转到新流程：头像建立 -> 主界面
+                    window.location.href = '/profile_setup';
+                } else {
+                    showError(data.message || '注册失败，请稍后重试');
+                    btn.disabled = false;
+                    btn.textContent = '开始创作我的头像';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('网络错误，请稍后重试');
+                btn.disabled = false;
+                btn.textContent = '开始创作我的头像';
+            }
+        });
+        
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+            
+            setTimeout(() => {
+                errorEl.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#7B57D6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>Go In - 欢迎</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/images/logo.png">
+    <link rel="apple-touch-icon" href="/static/images/logo.png">
+    <link rel="stylesheet" href="/static/css/goin_premium_v4.css">
+    <style>
+        /* 页面特定样式 */
+        .welcome-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-6);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* AI 光晕背景 */
+        .welcome-bg {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(
+                circle at 50% 30%,
+                rgba(7, 193, 96, 0.08) 0%,
+                transparent 60%
+            );
+            pointer-events: none;
+        }
+        
+        /* 漂浮粒子 */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(
+                circle,
+                rgba(7, 193, 96, 0.3) 0%,
+                transparent 70%
+            );
+            animation: float particle 20s infinite ease-in-out;
+            opacity: 0.6;
+        }
+        
+        @keyframes particleFloat {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+            25% {
+                transform: translate(10px, -15px) scale(1.05);
+            }
+            50% {
+                transform: translate(-10px, 10px) scale(0.95);
+            }
+            75% {
+                transform: translate(15px, 5px) scale(1.02);
+            }
+        }
+        
+        /* Logo 区域 */
+        .welcome-logo {
+            text-align: center;
+            margin-bottom: var(--space-12);
+            animation: fadeInDown var(--duration-slower) var(--ease-decelerate);
+        }
+        
+        .logo-image {
+            max-width: 280px;
+            width: 80%;
+            height: auto;
+            margin: 0 auto var(--space-4);
+            display: block;
+            filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.15));
+            transition: transform var(--duration-slower) var(--ease-decelerate);
+        }
+        
+        .logo-image:hover {
+            transform: scale(1.02);
+        }
+        
+        .logo-icon {
+            font-size: 80px;
+            margin-bottom: var(--space-4);
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+        }
+        
+        .logo-text {
+            font-size: var(--font-3xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--text-primary);
+            letter-spacing: var(--letter-spacing-wide);
+            margin-bottom: var(--space-2);
+        }
+        
+        .logo-subtitle {
+            font-size: var(--font-md);
+            color: var(--text-secondary);
+            font-weight: var(--font-weight-normal);
+        }
+        
+        /* 内容卡片 */
+        .welcome-card {
+            width: 100%;
+            max-width: 440px;
+            background: var(--bg-elevated);
+            border-radius: var(--radius-2xl);
+            padding: var(--space-8);
+            box-shadow: var(--shadow-lg);
+            animation: slideUp var(--duration-slower) var(--ease-decelerate) 0.2s both;
+        }
+        
+        .welcome-title {
+            font-size: var(--font-xl);
+            font-weight: var(--font-weight-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--space-2);
+            text-align: center;
+        }
+        
+        .welcome-desc {
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: var(--space-8);
+            line-height: var(--line-height-relaxed);
+        }
+        
+        /* 输入框组 */
+        .input-wrapper {
+            margin-bottom: var(--space-4);
+        }
+        
+        .input-hint {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-bottom: var(--space-2);
+        }
+        
+        .hint-icon {
+            font-size: var(--font-sm);
+            color: var(--brand-primary);
+        }
+        
+        .hint-text {
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+            font-weight: var(--font-weight-medium);
+        }
+        
+        /* 按钮 */
+        .continue-btn {
+            width: 100%;
+            height: 52px;
+            background: var(--brand-gradient);
+            color: white;
+            border: none;
+            border-radius: var(--radius-full);
+            font-size: var(--font-lg);
+            font-weight: var(--font-weight-semibold);
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            transition: all var(--duration-fast) var(--ease-standard);
+            margin-top: var(--space-6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+        }
+        
+        .continue-btn:active {
+            transform: scale(0.96);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .continue-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-arrow {
+            font-size: var(--font-lg);
+            transition: transform var(--duration-fast) var(--ease-standard);
+        }
+        
+        .continue-btn:hover .btn-arrow {
+            transform: translateX(4px);
+        }
+        
+        /* 动画关键帧 */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 加载状态 */
+        .loading {
+            position: relative;
+            pointer-events: none;
+        }
+        
+        .loading::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: inherit;
+            border-radius: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* 成功状态 */
+        .success-checkmark {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto var(--space-6);
+            border-radius: 50%;
+            background: var(--brand-success);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            animation: checkmarkPop var(--duration-normal) var(--ease-bounce);
+        }
+        
+        @keyframes checkmarkPop {
+            0% {
+                transform: scale(0) rotate(0deg);
+            }
+            50% {
+                transform: scale(1.2) rotate(15deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+        }
+    </style>
+</head>
+<body class="app-mobile">
+    <div class="welcome-page">
+        <!-- AI 光晕背景 -->
+        <div class="welcome-bg"></div>
+        
+        <!-- 漂浮粒子 -->
+        <div id="particles"></div>
+        
+        <!-- Logo -->
+        <div class="welcome-logo">
+            <img src="/static/images/logo.png" alt="Go In Logo" class="logo-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <div class="logo-icon" style="display: none;">🌆</div>
+            <div class="logo-text">Go In</div>
+            <div class="logo-subtitle">一个会自己发生的世界</div>
+        </div>
+        
+        <!-- 内容卡片 -->
+        <div class="welcome-card">
+            <div class="welcome-title">你好，很高兴遇见你</div>
+            <div class="welcome-desc">
+                在这里，你将遇见另一个可能的自己<br>
+                一切都将自然发生
+            </div>
+            
+            <!-- 用户名字输入 -->
+            <div class="input-wrapper">
+                <div class="input-hint">
+                    <span class="hint-icon">✨</span>
+                    <span class="hint-text">该怎么称呼你呢？</span>
+                </div>
+                <input 
+                    type="text" 
+                    id="userName" 
+                    class="input-field"
+                    placeholder="你的名字（例如：小明）"
+                    autocomplete="off"
+                >
+            </div>
+            
+            <!-- AI 分身名字输入 -->
+            <div class="input-wrapper">
+                <div class="input-hint">
+                    <span class="hint-icon">🤖</span>
+                    <span class="hint-text">给你的 AI 分身起个名字吧</span>
+                </div>
+                <input 
+                    type="text" 
+                    id="aiName" 
+                    class="input-field"
+                    placeholder="AI 分身名字（例如：小智）"
+                    autocomplete="off"
+                >
+            </div>
+            
+            <!-- 继续按钮 -->
+            <button class="continue-btn" onclick="handleContinue()">
+                <span>开启旅程</span>
+                <span class="btn-arrow">→</span>
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        // 生成漂浮粒子
+        function createParticles() {
+            const container = document.getElementById('particles');
+            const particleCount = 8;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                
+                const size = Math.random() * 60 + 20;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.top = `${Math.random() * 100}%`;
+                
+                particle.style.animationDelay = `${Math.random() * 10}s`;
+                particle.style.animationDuration = `${Math.random() * 10 + 15}s`;
+                
+                container.appendChild(particle);
+            }
+        }
+        
+        // 初始化
+        createParticles();
+        
+        // 处理继续操作
+        async function handleContinue() {
+            const userName = document.getElementById('userName').value.trim();
+            const aiName = document.getElementById('aiName').value.trim();
+            
+            if (!userName || !aiName) {
+                showToast('请填写名字和 AI 分身名字');
+                return;
+            }
+            
+            const btn = document.querySelector('.continue-btn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            try {
+                // 保存信息到后端
+                const response = await fetch('/api/save_avatar_info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_name: userName,
+                        ai_name: aiName,
+                        avatar_style: 'human',
+                        onboarding_completed: true
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 显示成功动画
+                    showSuccessAndRedirect();
+                } else {
+                    throw new Error(data.message || '保存失败');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showToast('网络开小差了，请稍后再试');
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+        
+        // 显示成功动画并跳转
+        function showSuccessAndRedirect() {
+            const card = document.querySelector('.welcome-card');
+            
+            card.innerHTML = `
+                <div class="success-checkmark">✓</div>
+                <div class="welcome-title" style="text-align: center;">准备好了吗？</div>
+                <div class="welcome-desc" style="text-align: center;">
+                    即将进入你的 AI 世界...
+                </div>
+            `;
+            
+            // 延迟跳转
+            setTimeout(() => {
+                window.location.href = '/profile_setup';
+            }, 1500);
+        }
+        
+        // 显示提示
+        function showToast(message) {
+            // 简单的 alert，可以优化为更优雅的 toast
+            alert(message);
+        }
+        
+        // 回车提交
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleContinue();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Go In - 欢迎</title>
+    <link rel="stylesheet" href="/static/css/goin_brand_v3.css">
+    <style>
+        body.app-mobile {
+            background: radial-gradient(circle at 20% 10%, #fefefd 0%, #f7f7f5 38%, #efefed 100%);
+            overflow: hidden;
+        }
+        .onboarding-wrap {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .cosmos-bg {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .star {
+            position: absolute;
+            background: rgba(58, 62, 78, 0.28);
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+        .floating-orb {
+            position: absolute;
+            background: radial-gradient(circle, rgba(23, 201, 100, 0.22) 0%, rgba(57, 199, 255, 0) 70%);
+            border-radius: 50%;
+            animation: float 6s infinite ease-in-out;
+        }
+        .ai-silhouette {
+            position: absolute;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(23, 201, 100, 0.14) 0%, rgba(57, 199, 255, 0) 72%);
+            filter: blur(10px);
+            animation: breathe 4s infinite;
+        }
+        .container {
+            position: relative;
+            z-index: 1;
+            width: min(100%, 440px);
+            padding: 20px;
+            border-radius: var(--radius-xl);
+            background: rgba(255,255,255,0.86);
+            border: 1px solid var(--stroke-soft);
+            box-shadow: var(--shadow-sm);
+        }
+        .welcome-text h1 {
+            margin: 0 0 8px;
+            font-size: 26px;
+            line-height: 1.28;
+        }
+        .welcome-text p {
+            margin: 0 0 16px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .input-group { margin-bottom: 12px; }
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .input-group input {
+            width: 100%;
+            height: 44px;
+            border: 1px solid var(--stroke-soft);
+            border-radius: var(--radius-sm);
+            background: #fff;
+            padding: 0 12px;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #8ddfb3;
+            box-shadow: 0 0 0 3px rgba(23, 201, 100, 0.14);
+        }
+        .dynamic-line {
+            margin-top: 6px;
+            min-height: 18px;
+            color: #1f8a56;
+            font-size: 12px;
+        }
+        .voice-input-btn {
+            width: 46px;
+            height: 46px;
+            border-radius: 999px;
+            border: 1px solid var(--stroke-soft);
+            background: #fff;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+        .actions {
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .continue-btn {
+            flex: 1;
+            height: 44px;
+            border: 0;
+            border-radius: var(--radius-sm);
+            background: var(--brand-gradient);
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .tip {
+            color: var(--text-tertiary);
+            font-size: 12px;
+            line-height: 1.5;
+            margin-top: 10px;
+        }
+        #gToast {
+            position: fixed;
+            bottom: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 20, 20, 0.84);
+            color: #fff;
+            padding: 9px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            z-index: 40;
+        }
+        @keyframes twinkle { 0%,100%{opacity:.3;} 50%{opacity:.9;} }
+        @keyframes float { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-18px);} }
+        @keyframes breathe { 0%,100%{transform:scale(1);} 50%{transform:scale(1.08);} }
+        @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(23,201,100,.3);} 50%{box-shadow:0 0 0 10px rgba(23,201,100,0);} }
+    </style>
+</head>
+<body class="app-mobile">
+    <div class="onboarding-wrap">
+        <div class="cosmos-bg" id="cosmosBg"></div>
+        <div class="ai-silhouette"></div>
+
+        <div class="container g-fade-in">
+            <div class="welcome-text">
+                <h1>欢迎来到 Go In</h1>
+                <p>一个会自己发生的 AI 世界</p>
+            </div>
+
+            <div class="input-group">
+                <label for="userName">动态文本：你好，我是 _______</label>
+                <input type="text" id="userName" placeholder="请输入你的名字">
+                <div class="dynamic-line" id="dynamicUser">你好，我是 _______</div>
+            </div>
+
+            <div class="input-group">
+                <label for="aiName">动态文本：很高兴认识你，_______</label>
+                <input type="text" id="aiName" placeholder="为你的 AI 分身命名">
+                <div class="dynamic-line" id="dynamicAi">很高兴认识你，_______</div>
+            </div>
+
+            <div class="actions">
+                <button class="voice-input-btn" onclick="startVoiceInput()">🎤</button>
+                <button class="continue-btn" onclick="continueToAuth()">继续</button>
+            </div>
+
+            <p class="tip">继续后进入注册/登录。我们会把“完成引导”写入后端，确保后续跳转稳定。</p>
+        </div>
+    </div>
+
+    <div id="gToast" class="hidden"></div>
+
+    <script src="/static/js/goin_brand_v3.js"></script>
+    <script>
+        function createStars() {
+            const cosmosBg = document.getElementById('cosmosBg');
+            const starCount = 80;
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = (Math.random() * 2 + 1) + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 3 + 's';
+                cosmosBg.appendChild(star);
+            }
+        }
+
+        function createOrbs() {
+            const cosmosBg = document.getElementById('cosmosBg');
+            const orbCount = 4;
+            for (let i = 0; i < orbCount; i++) {
+                const orb = document.createElement('div');
+                orb.className = 'floating-orb';
+                orb.style.left = Math.random() * 100 + '%';
+                orb.style.top = Math.random() * 100 + '%';
+                orb.style.width = (Math.random() * 180 + 120) + 'px';
+                orb.style.height = orb.style.width;
+                orb.style.animationDelay = Math.random() * 6 + 's';
+                cosmosBg.appendChild(orb);
+            }
+        }
+
+        function bindLiveText() {
+            const userInput = document.getElementById('userName');
+            const aiInput = document.getElementById('aiName');
+            const dynamicUser = document.getElementById('dynamicUser');
+            const dynamicAi = document.getElementById('dynamicAi');
+            userInput.addEventListener('input', () => {
+                dynamicUser.textContent = `你好，我是 ${userInput.value || '_______'}`;
+            });
+            aiInput.addEventListener('input', () => {
+                dynamicAi.textContent = `很高兴认识你，${aiInput.value || '_______'}`;
+            });
+        }
+
+        function startVoiceInput() {
+            GoInBrand.showToast('语音输入演示：请说出你的名字或 AI 分身名字');
+        }
+
+        async function continueToAuth() {
+            const userName = document.getElementById('userName').value.trim();
+            const aiName = document.getElementById('aiName').value.trim();
+            if (!userName || !aiName) {
+                GoInBrand.showToast('请填写名字和 AI 分身名字');
+                return;
+            }
+
+            // 本地存一份，便于后续使用
+            localStorage.setItem('goIn_userName', userName);
+            localStorage.setItem('goIn_aiName', aiName);
+
+            // 写回后端，避免 /app_main 反复重定向到 /onboarding
+            try {
+                await fetch('/api/save_avatar_info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_name: userName,
+                        ai_name: aiName,
+                        avatar_style: 'human',
+                        onboarding_completed: true
+                    })
+                });
+            } catch (e) {}
+
+            window.location.href = '/auth';
+        }
+
+        createStars();
+        createOrbs();
+        bindLiveText();
+    </script>
+</body>
+</html>
+

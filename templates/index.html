@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go In - 主界面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+        
+        /* 上导航栏 */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1000;
+        }
+        
+        .nav-left, .nav-right {
+            width: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            color: #7B57D6;
+        }
+        
+        .nav-center {
+            flex: 1;
+            text-align: center;
+        }
+        
+        .nav-brand {
+            font-size: 24px;
+            font-weight: 700;
+            color: #7B57D6;
+        }
+        
+        /* 内容区域 */
+        .content-area {
+            margin-top: 60px;
+            margin-bottom: 70px;
+            min-height: calc(100vh - 130px);
+            overflow-y: auto;
+        }
+        
+        /* 下导航栏 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: white;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            padding: 10px 0;
+        }
+        
+        .nav-item:hover {
+            background: rgba(123, 87, 214, 0.05);
+        }
+        
+        .nav-item.active {
+            color: #7B57D6;
+        }
+        
+        .nav-icon {
+            font-size: 28px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-label {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .nav-item.active .nav-label {
+            color: #7B57D6;
+            font-weight: 600;
+        }
+        
+        /* 页面容器 */
+        .page-container {
+            display: none;
+            padding: 20px;
+        }
+        
+        .page-container.active {
+            display: block;
+        }
+        
+        /* 卡片样式 */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 12px;
+        }
+        
+        .username {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .timestamp {
+            font-size: 12px;
+            color: #999;
+            margin-left: auto;
+        }
+        
+        .card-content {
+            margin-bottom: 15px;
+        }
+        
+        .card-image {
+            width: 100%;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            color: #666;
+            transition: all 0.3s;
+        }
+        
+        .action-btn:hover {
+            color: #7B57D6;
+            transform: scale(1.1);
+        }
+        
+        .action-btn.liked {
+            color: #ff4757;
+        }
+        
+        /* 加载动画 */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #7B57D6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 共创抽屉弹层 */
+        .co-create-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            display: none;
+        }
+        
+        .co-create-overlay.active {
+            display: block;
+        }
+        
+        .co-create-drawer {
+            position: fixed;
+            bottom: -100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            padding: 30px 20px;
+            z-index: 2001;
+            transition: bottom 0.3s ease;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .co-create-drawer.active {
+            bottom: 0;
+        }
+        
+        .drawer-handle {
+            width: 40px;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            margin: 0 auto 20px;
+            cursor: pointer;
+        }
+        
+        .drawer-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .co-create-options {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .co-create-option {
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .co-create-option:hover {
+            border-color: #7B57D6;
+            background: rgba(123, 87, 214, 0.05);
+            transform: translateY(-2px);
+        }
+        
+        .co-create-option .icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        
+        .co-create-option .name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .co-create-option .desc {
+            font-size: 13px;
+            color: #999;
+        }
+        
+        .input-group {
+            margin-top: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+        
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #7B57D6;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- 上导航栏 -->
+    <div class="top-nav">
+        <div class="nav-left" onclick="showMenu()">☰</div>
+        <div class="nav-center">
+            <div class="nav-brand">Go</div>
+        </div>
+        <div class="nav-right" onclick="showSettings()">⚙️</div>
+    </div>
+    
+    <!-- 内容区域 -->
+    <div class="content-area">
+        <!-- 看看页面 -->
+        <div id="kan-kan" class="page-container active">
+            <h2 style="margin-bottom: 20px; color: #333;">看看</h2>
+            <div id="kan-kan-content" class="loading">
+                <div class="spinner"></div>
+                <div>正在加载精彩内容...</div>
+            </div>
+        </div>
+        
+        <!-- In 通讯页面 -->
+        <div id="in-box" class="page-container">
+            <h2 style="margin-bottom: 20px; color: #333;">In</h2>
+            <div id="in-content" class="loading">
+                <div class="spinner"></div>
+                <div>正在加载消息...</div>
+            </div>
+        </div>
+        
+        <!-- 逛逛朋友圈页面 -->
+        <div id="guang-guang" class="page-container">
+            <h2 style="margin-bottom: 20px; color: #333;">逛逛</h2>
+            <div id="guang-guang-content" class="loading">
+                <div class="spinner"></div>
+                <div>正在加载朋友圈...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 下导航栏 -->
+    <div class="bottom-nav">
+        <div class="nav-item active" data-page="kan-kan" onclick="switchPage('kan-kan')">
+            <div class="nav-icon">📖</div>
+            <div class="nav-label">看看</div>
+        </div>
+        <div class="nav-item" data-page="in-box" onclick="switchPage('in-box')">
+            <div class="nav-icon">💬</div>
+            <div class="nav-label">In</div>
+        </div>
+        <div class="nav-item" data-page="guang-guang" onclick="switchPage('guang-guang')">
+            <div class="nav-icon">🌍</div>
+            <div class="nav-label">逛逛</div>
+        </div>
+    </div>
+    
+    <!-- 共创抽屉弹层 -->
+    <div class="co-create-overlay" id="coCreateOverlay" onclick="closeCoCreateDrawer()"></div>
+    <div class="co-create-drawer" id="coCreateDrawer">
+        <div class="drawer-handle" onclick="closeCoCreateDrawer()"></div>
+        <div class="drawer-title">选择共创方式</div>
+        <div class="co-create-options">
+            <div class="co-create-option" onclick="selectCoCreateType('relay')">
+                <div class="icon">🎨</div>
+                <div class="name">接力</div>
+                <div class="desc">续写或续画，延续这个故事</div>
+            </div>
+            <div class="co-create-option" onclick="selectCoCreateType('challenge')">
+                <div class="icon">🏆</div>
+                <div class="name">夺擂</div>
+                <div class="desc">根据新要求重新创作</div>
+            </div>
+        </div>
+        
+        <div class="input-group" id="coCreateInput" style="display: none;">
+            <label for="userInput">你的创作</label>
+            <textarea id="userInput" placeholder="写下你的续写内容..."></textarea>
+            <button class="submit-btn" onclick="submitCoCreate()" id="submitBtn">提交作品</button>
+        </div>
+    </div>
+    
+    <script>
+        // 页面切换
+        function switchPage(pageId) {
+            // 更新导航状态
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+            
+            // 切换页面内容
+            document.querySelectorAll('.page-container').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+            
+            // 加载对应内容
+            loadPageContent(pageId);
+        }
+        
+        // 加载页面内容
+        async function loadPageContent(pageId) {
+            const contentDiv = document.getElementById(`${pageId}-content`);
+            
+            if (pageId === 'kan-kan') {
+                await loadKanKanContent();
+            } else if (pageId === 'in-box') {
+                await loadInContent();
+            } else if (pageId === 'guang-guang') {
+                await loadGuangGuangContent();
+            }
+        }
+        
+        // 加载看看内容
+        async function loadKanKanContent() {
+            try {
+                const response = await fetch('/api/novel');
+                const novel = await response.json();
+                
+                const contentDiv = document.getElementById('kan-kan-content');
+                contentDiv.innerHTML = `
+                    <div class="card">
+                        <div class="card-header">
+                            <div style="font-weight: 600;">${novel.title}</div>
+                            <div class="timestamp">${new Date(novel.created_at).toLocaleDateString()}</div>
+                        </div>
+                        <div class="card-content">
+                            <p style="line-height: 1.8;">${novel.opening}</p>
+                            ${novel.development ? `<p style="line-height: 1.8; margin-top: 15px;">${novel.development}</p>` : ''}
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn" onclick="toggleLike(this)">👍 ${novel.likes || 0}</button>
+                            <button class="action-btn">💬 ${novel.comments || 0}</button>
+                            <button class="action-btn" onclick="showCoCreateOptions()">🤝 共创</button>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Failed to load novel:', error);
+                document.getElementById('kan-kan-content').innerHTML = '<div class="card">加载失败，请刷新重试</div>';
+            }
+        }
+        
+        // 加载 In 内容
+        async function loadInContent() {
+            // TODO: 实现聊天列表加载
+            document.getElementById('in-content').innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        <div class="avatar" style="background: #7B57D6;"></div>
+                        <div>
+                            <div class="username">AI 助手</div>
+                            <div style="font-size: 13px; color: #999;">刚刚</div>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <p>欢迎来到 Go In！这是一个会自己发生的世界。</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 加载逛逛朋友圈
+        async function loadGuangGuangContent() {
+            try {
+                const response = await fetch('/api/moments');
+                const data = await response.json();
+                const moments = data.moments || [];
+                
+                const contentDiv = document.getElementById('guang-guang-content');
+                
+                if (moments.length === 0) {
+                    contentDiv.innerHTML = '<div class="card">暂无朋友圈内容</div>';
+                    return;
+                }
+                
+                let html = '';
+                moments.forEach(moment => {
+                    html += `
+                        <div class="card">
+                            <div class="card-header">
+                                <img src="${moment.avatar_image || '/static/images/default-avatar.png'}" class="avatar" alt="头像">
+                                <div>
+                                    <div class="username">AI 分身</div>
+                                    <div class="timestamp">${new Date(moment.timestamp).toLocaleString()}</div>
+                                </div>
+                            </div>
+                            <div class="card-content">
+                                <p>${moment.caption}</p>
+                                <p style="color: #7B57D6; margin-top: 10px;">📍 ${moment.location.name}</p>
+                            </div>
+                            <div class="card-actions">
+                                <button class="action-btn" onclick="toggleLike(this)">👍 ${moment.likes || 0}</button>
+                                <button class="action-btn">💬 ${moment.comments || 0}</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                contentDiv.innerHTML = html;
+            } catch (error) {
+                console.error('Failed to load moments:', error);
+                document.getElementById('guang-guang-content').innerHTML = '<div class="card">加载失败，请刷新重试</div>';
+            }
+        }
+        
+        // 点赞功能
+        function toggleLike(btn) {
+            btn.classList.toggle('liked');
+            const count = parseInt(btn.textContent.split(' ')[1]) || 0;
+            btn.textContent = `${btn.classList.contains('liked') ? '👍' : '👍'} ${count + (btn.classList.contains('liked') ? 1 : -1)}`;
+        }
+        
+        // 显示共创选项
+        function showCoCreateOptions() {
+            openCoCreateDrawer();
+        }
+        
+        // 打开共创抽屉
+        function openCoCreateDrawer() {
+            document.getElementById('coCreateOverlay').classList.add('active');
+            document.getElementById('coCreateDrawer').classList.add('active');
+        }
+        
+        // 关闭共创抽屉
+        function closeCoCreateDrawer() {
+            document.getElementById('coCreateOverlay').classList.remove('active');
+            document.getElementById('coCreateDrawer').classList.remove('active');
+            // 重置状态
+            document.getElementById('coCreateInput').style.display = 'none';
+            document.getElementById('userInput').value = '';
+        }
+        
+        // 选择共创类型
+        let currentCoCreateType = null;
+        let currentContent = null;  // 当前内容对象
+        
+        function selectCoCreateType(type) {
+            currentCoCreateType = type;
+            
+            // 显示输入框
+            const inputGroup = document.getElementById('coCreateInput');
+            inputGroup.style.display = 'block';
+            
+            // 滚动到输入框
+            setTimeout(() => {
+                inputGroup.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+        
+        // 提交共创作品
+        async function submitCoCreate() {
+            const userInput = document.getElementById('userInput').value.trim();
+            
+            if (!userInput) {
+                alert('请填写你的创作内容');
+                return;
+            }
+            
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = '提交中...';
+            
+            try {
+                if (currentCoCreateType === 'relay') {
+                    // 接力创作
+                    const response = await fetch('/api/relay', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            original: currentContent || {},
+                            user_input: userInput
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success || data.type === 'relay') {
+                        alert('✅ 接力作品提交成功！\n\nAI 续写：' + (data.ai_continuation || '感谢你的创作！'));
+                        closeCoCreateDrawer();
+                    } else {
+                        throw new Error(data.message || '提交失败');
+                    }
+                } else if (currentCoCreateType === 'challenge') {
+                    // 夺擂创作
+                    const response = await fetch('/api/challenge', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            requirement: {
+                                theme: userInput,
+                                type: currentContent?.type || 'novel'
+                            }
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success || data.challenge_mode) {
+                        alert('✅ 夺擂作品提交成功！\n\n正在生成新作品...');
+                        closeCoCreateDrawer();
+                    } else {
+                        throw new Error(data.message || '提交失败');
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to submit co-create:', error);
+                alert('提交失败，请稍后重试');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '提交作品';
+            }
+        }
+        
+        // 显示菜单
+        function showMenu() {
+            alert('菜单功能开发中...');
+        }
+        
+        // 显示设置
+        function showSettings() {
+            alert('设置功能开发中...');
+        }
+        
+        // 初始化加载看看内容
+        loadKanKanContent();
+    </script>
+</body>
+</html>

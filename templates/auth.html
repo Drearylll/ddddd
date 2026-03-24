@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Go In - 注册 / 登录</title>
+    <link rel="stylesheet" href="/static/css/goin_brand_v3.css">
+    <style>
+        body.app-mobile {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 14px;
+        }
+        .phone-shell {
+            width: min(100%, 440px);
+            border-radius: var(--radius-xl);
+            background: #fff;
+            border: 1px solid var(--stroke-soft);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+        .inner {
+            padding: 18px;
+        }
+        .badge {
+            display: inline-block;
+            border-radius: 999px;
+            border: 1px solid #d7f3e4;
+            background: #eefaf3;
+            color: #238b58;
+            padding: 5px 10px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        h1 {
+            margin: 0 0 6px;
+            font-size: 24px;
+            line-height: 1.3;
+        }
+        .sub {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0 0 14px;
+        }
+        .mode-switch {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding: 4px;
+            border-radius: 14px;
+            border: 1px solid var(--stroke-soft);
+            background: #f8f8f7;
+            margin-bottom: 12px;
+        }
+        .mode-btn {
+            height: 38px;
+            border-radius: 10px;
+            border: 0;
+            font-size: 14px;
+            cursor: pointer;
+            background: transparent;
+            color: var(--text-secondary);
+        }
+        .mode-btn.active {
+            background: #fff;
+            color: var(--text-primary);
+            box-shadow: var(--shadow-xs);
+            border: 1px solid var(--stroke-soft);
+        }
+        .card {
+            border-radius: var(--radius-md);
+            background: var(--bg-elevated);
+            border: 1px solid var(--stroke-soft);
+            padding: 14px;
+        }
+        .field {
+            margin-bottom: 10px;
+        }
+        .field label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+        .field input {
+            width: 100%;
+            height: 42px;
+            border-radius: 10px;
+            border: 1px solid var(--stroke-soft);
+            padding: 0 10px;
+            font-size: 14px;
+        }
+        .field input:focus {
+            outline: none;
+            border-color: #8ddfb3;
+            box-shadow: 0 0 0 3px rgba(23, 201, 100, 0.14);
+        }
+        .tips {
+            margin: 0 0 10px;
+            font-size: 12px;
+            color: var(--text-tertiary);
+            line-height: 1.5;
+        }
+        .submit {
+            width: 100%;
+            height: 42px;
+            border: 0;
+            border-radius: 10px;
+            color: #fff;
+            background: var(--brand-gradient);
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .fake-third-party {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+        .ghost {
+            height: 34px;
+            border-radius: 10px;
+            border: 1px solid var(--stroke-soft);
+            background: #fafaf9;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+        .status {
+            min-height: 18px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #cc3f3f;
+        }
+        .status.ok {
+            color: #228b57;
+        }
+    </style>
+</head>
+<body class="app-mobile">
+    <main class="phone-shell">
+        <div class="inner g-fade-in">
+            <div class="badge">Go In App Prototype</div>
+            <h1 id="title">欢迎回来，继续连接你的 AI 分身</h1>
+            <p class="sub">先完成注册或登录，再进入“为我赋形 · 赋声”。这是一个可直接升级为 React/Flutter 结构的页面模块。</p>
+
+            <div class="mode-switch" role="tablist" aria-label="切换注册和登录">
+                <button class="mode-btn active" id="tabRegister" onclick="switchMode('register')">注册</button>
+                <button class="mode-btn" id="tabLogin" onclick="switchMode('login')">登录</button>
+            </div>
+
+            <section class="card">
+                <div class="field">
+                    <label for="emailInput">邮箱 / 手机号</label>
+                    <input id="emailInput" type="text" placeholder="name@example.com">
+                </div>
+                <div class="field" id="passwordGroup">
+                    <label for="passwordInput">密码</label>
+                    <input id="passwordInput" type="password" placeholder="请输入密码">
+                </div>
+                <div class="field" id="confirmGroup">
+                    <label for="confirmInput">确认密码</label>
+                    <input id="confirmInput" type="password" placeholder="再次输入密码">
+                </div>
+                <p class="tips" id="tipsText">注册即表示你同意 Go In 的虚拟身份与 AI 代理体验协议。</p>
+                <button class="submit" id="submitBtn" onclick="submitAuth()">注册并继续</button>
+                <div class="fake-third-party">
+                    <button class="ghost" type="button">微信</button>
+                    <button class="ghost" type="button">QQ</button>
+                    <button class="ghost" type="button">Apple</button>
+                </div>
+                <div class="status" id="statusText"></div>
+            </section>
+        </div>
+    </main>
+
+    <script src="/static/js/goin_brand_v3.js"></script>
+    <script>
+        let authMode = 'register';
+
+        function switchMode(mode) {
+            authMode = mode;
+            const registerTab = document.getElementById('tabRegister');
+            const loginTab = document.getElementById('tabLogin');
+            const confirmGroup = document.getElementById('confirmGroup');
+            const submitBtn = document.getElementById('submitBtn');
+            const tipsText = document.getElementById('tipsText');
+            const title = document.getElementById('title');
+            const statusText = document.getElementById('statusText');
+
+            registerTab.classList.toggle('active', mode === 'register');
+            loginTab.classList.toggle('active', mode === 'login');
+            confirmGroup.style.display = mode === 'register' ? 'block' : 'none';
+
+            if (mode === 'register') {
+                submitBtn.textContent = '注册并继续';
+                tipsText.textContent = '注册即表示你同意 Go In 的虚拟身份与 AI 代理体验协议。';
+                title.textContent = '欢迎加入，创建你的 AI 身份';
+            } else {
+                submitBtn.textContent = '登录并继续';
+                tipsText.textContent = '登录后可读取你的 AI 分身记录和灵魂日志。';
+                title.textContent = '欢迎回来，继续连接你的 AI 分身';
+            }
+
+            statusText.textContent = '';
+            statusText.className = 'status';
+        }
+
+        function submitAuth() {
+            const email = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('passwordInput').value.trim();
+            const confirm = document.getElementById('confirmInput').value.trim();
+            const statusText = document.getElementById('statusText');
+
+            if (!email || !password) {
+                statusText.textContent = '请填写账号和密码。';
+                GoInBrand.showToast('请填写账号和密码');
+                return;
+            }
+            if (authMode === 'register' && password !== confirm) {
+                statusText.textContent = '两次密码不一致，请检查。';
+                GoInBrand.showToast('两次密码不一致');
+                return;
+            }
+
+            localStorage.setItem('goIn_auth_mode', authMode);
+            localStorage.setItem('goIn_auth_account', email);
+            localStorage.setItem('goIn_auth_completed', 'true');
+
+            statusText.textContent = authMode === 'register' ? '注册成功，正在进入头像建立...' : '登录成功，正在进入头像建立...';
+            statusText.className = 'status ok';
+            GoInBrand.showToast(authMode === 'register' ? '注册成功' : '登录成功');
+
+            setTimeout(() => {
+                window.location.href = '/profile_setup';
+            }, 620);
+        }
+    </script>
+</body>
+</html>

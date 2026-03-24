@@ -1,0 +1,257 @@
+:root {
+    --bg-base: #f6f6f4;
+    --bg-elevated: #ffffff;
+    --bg-muted: #f1f1ef;
+    --text-primary: #1f1f1f;
+    --text-secondary: #5f6368;
+    --text-tertiary: #84888e;
+    --brand-accent: #17c964;
+    --brand-accent-strong: #12a150;
+    --brand-hot: #ff2f63;
+    --brand-gradient: linear-gradient(135deg, #14c96a 0%, #39c7ff 100%);
+    --stroke-soft: #e8e8e5;
+    --stroke-strong: #d9d9d5;
+    --shadow-xs: 0 2px 8px rgba(18, 24, 40, 0.06);
+    --shadow-sm: 0 8px 20px rgba(18, 24, 40, 0.08);
+    --radius-xs: 8px;
+    --radius-sm: 12px;
+    --radius-md: 16px;
+    --radius-lg: 22px;
+    --radius-xl: 28px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --font-xs: 12px;
+    --font-sm: 14px;
+    --font-md: 16px;
+    --font-lg: 20px;
+    --font-xl: 28px;
+    --duration-fast: 160ms;
+    --duration-mid: 260ms;
+    --duration-slow: 420ms;
+    --ease-natural: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+body.app-mobile {
+    max-width: 520px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: linear-gradient(180deg, #fafaf8, #f4f4f1);
+}
+
+.g-shell {
+    min-height: 100vh;
+    background: transparent;
+}
+
+.g-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(246, 246, 244, 0.94);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--stroke-soft);
+}
+
+.g-topbar-inner {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-4);
+}
+
+.g-logo {
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 0.2px;
+}
+
+.g-logo-dot {
+    color: var(--brand-accent);
+}
+
+.g-icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: 1px solid var(--stroke-soft);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow-xs);
+    cursor: pointer;
+    transition: transform var(--duration-fast) var(--ease-natural), background var(--duration-fast);
+}
+
+.g-icon-btn:active {
+    transform: scale(0.95);
+}
+
+.g-content {
+    padding: var(--space-4);
+    padding-bottom: 88px;
+}
+
+.g-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--stroke-soft);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xs);
+    padding: var(--space-4);
+    margin-bottom: var(--space-3);
+    transition: transform var(--duration-mid) var(--ease-natural), box-shadow var(--duration-mid) var(--ease-natural);
+}
+
+.g-card:active {
+    transform: translateY(1px);
+}
+
+.g-title {
+    font-size: var(--font-lg);
+    line-height: 1.3;
+    margin: 0 0 var(--space-2);
+}
+
+.g-subtitle {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.g-chip-row {
+    display: flex;
+    gap: var(--space-2);
+    overflow-x: auto;
+    padding-bottom: var(--space-2);
+    scrollbar-width: none;
+}
+
+.g-chip-row::-webkit-scrollbar {
+    display: none;
+}
+
+.g-chip {
+    border-radius: 999px;
+    border: 1px solid var(--stroke-strong);
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    font-size: var(--font-xs);
+    padding: 8px 12px;
+    white-space: nowrap;
+}
+
+.g-btn-primary,
+.g-btn-secondary {
+    border-radius: var(--radius-sm);
+    height: 42px;
+    border: 0;
+    padding: 0 14px;
+    font-size: var(--font-sm);
+    cursor: pointer;
+}
+
+.g-btn-primary {
+    color: #fff;
+    background: var(--brand-gradient);
+    box-shadow: 0 8px 18px rgba(20, 201, 106, 0.22);
+}
+
+.g-btn-secondary {
+    background: var(--bg-muted);
+    border: 1px solid var(--stroke-soft);
+    color: var(--text-primary);
+}
+
+.g-bottom-nav {
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
+    width: min(520px, 100%);
+    height: 70px;
+    background: rgba(255, 255, 255, 0.96);
+    border-top: 1px solid var(--stroke-soft);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    z-index: 30;
+}
+
+.g-tab {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: color var(--duration-fast);
+}
+
+.g-tab.active {
+    color: var(--text-primary);
+}
+
+.g-tab.active .g-tab-icon {
+    color: var(--brand-accent-strong);
+}
+
+.g-tab-icon {
+    font-size: 20px;
+    margin-bottom: 2px;
+}
+
+.g-skeleton {
+    height: 12px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #ececea 0%, #f8f8f7 50%, #ececea 100%);
+    background-size: 220% 100%;
+    animation: gSkeleton 1.3s infinite linear;
+}
+
+@keyframes gSkeleton {
+    from { background-position: 220% 0; }
+    to { background-position: -220% 0; }
+}
+
+.g-breathe {
+    animation: gBreathe 3.2s infinite ease-in-out;
+}
+
+@keyframes gBreathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+}
+
+.g-fade-in {
+    animation: gFadeIn var(--duration-slow) var(--ease-natural);
+}
+
+@keyframes gFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.g-like-pop {
+    animation: gLikePop 300ms var(--ease-natural);
+}
+
+@keyframes gLikePop {
+    0% { transform: scale(0.8); }
+    60% { transform: scale(1.14); }
+    100% { transform: scale(1); }
+}

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Go In - 建立你的唯一头像</title>
+    <link rel="stylesheet" href="/static/css/goin_brand_v3.css">
+    <style>
+        body.app-mobile { padding: 14px; }
+        .wrap {
+            max-width: 440px;
+            margin: 0 auto;
+            border-radius: var(--radius-xl);
+            background: #fff;
+            border: 1px solid var(--stroke-soft);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+        .inner { padding: 16px; }
+        .head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .go-mark {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: var(--brand-gradient);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+        }
+        .title { margin: 0; font-size: 22px; line-height: 1.3; }
+        .sub { margin: 8px 0 0; color: var(--text-secondary); font-size: 14px; line-height: 1.6; }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .card {
+            border-radius: var(--radius-md);
+            border: 1px solid var(--stroke-soft);
+            background: #fff;
+            padding: 12px;
+        }
+        .preview {
+            height: 160px;
+            border-radius: 14px;
+            border: 1px dashed var(--stroke-strong);
+            background: #fafaf9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .preview img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar {
+            width: 132px;
+            height: 132px;
+            border-radius: 999px;
+            border: 1px solid var(--stroke-soft);
+            background: #fff;
+            margin: 10px auto 0;
+            overflow: hidden;
+            box-shadow: var(--shadow-xs);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .row { display: flex; gap: 8px; margin-top: 10px; }
+        .row > * { flex: 1; }
+        .btn {
+            height: 42px;
+            border-radius: 10px;
+            border: 1px solid var(--stroke-soft);
+            background: #fafaf9;
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn:active {
+            transform: scale(0.95);
+        }
+        .btn.primary {
+            background: var(--brand-gradient);
+            border: 0;
+            color: #fff;
+            font-weight: 600;
+        }
+        .btn.primary:active {
+            transform: scale(0.95);
+        }
+        .gender {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .gender button {
+            height: 38px;
+            border-radius: 10px;
+            border: 1px solid var(--stroke-soft);
+            background: #fafaf9;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .gender button:active {
+            transform: scale(0.95);
+        }
+        .gender button.active {
+            background: #eefaf3;
+            border-color: #cdeeda;
+            color: #228b57;
+        }
+        .hint { margin-top: 8px; font-size: 12px; color: var(--text-tertiary); line-height: 1.5; }
+        .status { min-height: 18px; margin-top: 8px; font-size: 12px; color: #228b57; }
+        
+        /* 加载动画 */
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(32, 148, 91, 0.2);
+            border-top-color: #20945c;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 头像生成成功动画 */
+        .avatar-success {
+            animation: avatarPopIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        @keyframes avatarPopIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                transform: scale(1.15);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        /* 照片加载渐入 */
+        .photo-fade-in {
+            animation: photoFadeIn 0.5s ease;
+        }
+        
+        @keyframes photoFadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        /* 成功提示 */
+        .success-checkmark {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            color: #228b57;
+            animation: checkmarkPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        @keyframes checkmarkPop {
+            0% { transform: scale(0) rotate(45deg); }
+            50% { transform: scale(1.3) rotate(45deg); }
+            100% { transform: scale(1) rotate(45deg); }
+        }
+        
+        #gToast {
+            position: fixed;
+            bottom: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(20, 20, 20, 0.84);
+            color: #fff;
+            padding: 9px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            z-index: 40;
+        }
+    </style>
+</head>
+<body class="app-mobile">
+    <div class="wrap g-fade-in">
+        <div class="inner">
+            <div class="head">
+                <div class="go-mark">Go</div>
+                <button class="g-icon-btn" data-toast="隐私与协议开发中">⚙️</button>
+            </div>
+
+            <h1 class="title">进入主界面前，先建立你的唯一头像</h1>
+            <p class="sub">请上传一张包含清晰人脸的照片，并选择性别。系统会基于你的脸随机生成一张二维手绘彩色头像，用于绑定全站 AI 人物形象。</p>
+
+            <div class="grid">
+                <div class="card">
+                    <div class="preview" id="photoPreview">上传人脸照片</div>
+                    <input id="fileInput" type="file" accept="image/*" style="display:none">
+                    <div class="row">
+                        <button class="btn" onclick="pickPhoto()">选择照片</button>
+                        <button class="btn" onclick="detectFace()">检测人脸</button>
+                    </div>
+                    <div class="hint">说明：原型阶段优先保证体验顺滑；若浏览器不支持人脸检测，会降级为“人工确认”。</div>
+                </div>
+
+                <div class="card">
+                    <div style="font-size:14px; color:var(--text-secondary);">选择性别（影响姿势与内容语气的默认偏好）</div>
+                    <div class="gender">
+                        <button id="gMale" onclick="setGender('male')">男</button>
+                        <button id="gFemale" onclick="setGender('female')">女</button>
+                        <button id="gOther" onclick="setGender('other')">其他</button>
+                    </div>
+                    <div class="row" style="margin-top:12px;">
+                        <button class="btn" onclick="generateAvatar()">生成二维手绘头像</button>
+                        <button class="btn primary" onclick="saveAndEnter()">保存并进入主界面</button>
+                    </div>
+                    <div style="text-align: center; margin-top: 12px;">
+                        <button class="btn" onclick="skipProfileSetup()" style="background: transparent; border: 1px dashed var(--stroke-soft); color: var(--text-tertiary); font-size: 12px;">跳过，使用默认头像</button>
+                    </div>
+                    <div class="avatar" id="avatarBox"><img id="avatarImg" alt="avatar" style="display:none"></div>
+                    <div class="status" id="statusText"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="gToast" class="hidden"></div>
+
+    <script src="/static/js/goin_brand_v3.js"></script>
+    <script>
+        let rawPhotoDataUrl = null;
+        let avatarDataUrl = null;
+        let gender = null;
+        let faceOk = false;
+
+        // 页面加载时恢复之前保存的数据
+        window.addEventListener('DOMContentLoaded', () => {
+            // 持久化用户 ID（关键修复）
+            const userId = window.goInUserId || localStorage.getItem('goIn_user_id');
+            if (userId) {
+                localStorage.setItem('goIn_user_id', userId);
+                console.log('✅ 用户 ID 已持久化:', userId);
+            }
+            
+            const savedGender = localStorage.getItem('goIn_gender');
+            const savedPhoto = localStorage.getItem('goIn_face_photo');
+            const savedAvatar = localStorage.getItem('goIn_face_avatar');
+            
+            // 显示清除按钮（如果有保存的数据）
+            if (savedPhoto || savedAvatar) {
+                const resetBtn = document.createElement('div');
+                resetBtn.style.cssText = 'text-align:center;margin:10px 0;';
+                resetBtn.innerHTML = `<button onclick="resetProfileData()" style="padding:8px 16px;font-size:14px;color:#666;background:#f5f5f5;border:1px solid #ddd;border-radius:6px;cursor:pointer;">🔄 清除数据并重新上传</button>`;
+                const container = document.querySelector('.profile-container');
+                if (container) {
+                    container.insertBefore(resetBtn, container.firstChild);
+                }
+                console.log('ℹ️ 检测到已保存的头像数据，已添加清除按钮');
+            }
+            
+            // 恢复性别选择（但不显示照片，保持空白让用户重新上传）
+            if (savedGender) {
+                gender = savedGender;
+                // 更新性别按钮状态
+                document.querySelectorAll('.gender button').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.textContent === '男' && savedGender === 'male') btn.classList.add('active');
+                    if (btn.textContent === '女' && savedGender === 'female') btn.classList.add('active');
+                    if (btn.textContent === '其他' && savedGender === 'other') btn.classList.add('active');
+                });
+            }
+            
+            // 关键修改：不再自动显示照片和头像，保持空白状态
+            // 这样用户每次访问都需要主动重新上传照片
+            // 但数据仍然保存在 localStorage 中供保存时使用
+            
+            console.log('页面已加载（照片区域保持空白，等待用户重新上传）');
+        });
+        
+        // 添加全局清除函数
+        window.resetProfileData = function() {
+            if (confirm('确定要清除所有头像数据并重新上传吗？\n\n这将删除：\n- 已上传的照片\n- 已选择的性别\n- 已生成的头像\n\n此操作不可恢复！')) {
+                localStorage.removeItem('goIn_gender');
+                localStorage.removeItem('goIn_face_photo');
+                localStorage.removeItem('goIn_face_avatar');
+                localStorage.removeItem('goIn_user_id');
+                
+                // 重置变量
+                gender = null;
+                rawPhotoDataUrl = null;
+                avatarDataUrl = null;
+                faceOk = false;
+                
+                // 重置 UI
+                document.getElementById('photoPreview').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;">未选择照片</div>';
+                document.getElementById('avatarImg').style.display = 'none';
+                document.querySelectorAll('.gender button').forEach(btn => btn.classList.remove('active'));
+                
+                // 移除清除按钮
+                const resetBtn = document.querySelector('button[onclick="resetProfileData()"]');
+                if (resetBtn) resetBtn.parentElement.remove();
+                
+                setStatus('');
+                GoInBrand.showToast('✅ 数据已清除，请重新上传照片');
+                console.log('✅ 已清除所有头像数据');
+            }
+        };
+
+        const fileInput = document.getElementById('fileInput');
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            rawPhotoDataUrl = await readAsDataUrl(file);
+            faceOk = false;
+            document.getElementById('photoPreview').innerHTML = `<img alt="photo" src="${rawPhotoDataUrl}">`;
+            setStatus('照片已加载，建议先检测人脸。');
+            GoInBrand.showToast('照片已加载');
+        });
+
+        function pickPhoto() {
+            fileInput.click();
+        }
+
+        function setGender(next) {
+            gender = next;
+            document.getElementById('gMale').classList.toggle('active', next === 'male');
+            document.getElementById('gFemale').classList.toggle('active', next === 'female');
+            document.getElementById('gOther').classList.toggle('active', next === 'other');
+            GoInBrand.showToast('性别已选择');
+        }
+
+        async function detectFace() {
+            if (!rawPhotoDataUrl) {
+                GoInBrand.showToast('请先选择照片');
+                return;
+            }
+            setStatus('正在检测人脸...');
+
+            // 优先使用 FaceDetector（若可用）
+            try {
+                if ('FaceDetector' in window) {
+                    const detector = new FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
+                    const img = await dataUrlToImage(rawPhotoDataUrl);
+                    const faces = await detector.detect(img);
+                    faceOk = faces && faces.length > 0;
+                    setStatus(faceOk ? '检测到人脸 ✅' : '未检测到人脸，请换一张更清晰的正面照。');
+                    GoInBrand.showToast(faceOk ? '检测到人脸' : '未检测到人脸');
+                    return;
+                }
+            } catch (e) {
+                // ignore, fallback below
+            }
+
+            // 降级：人工确认（原型）
+            faceOk = true;
+            setStatus('人脸检测已降级为人工确认（原型演示），请确保上传的是清晰人脸照。');
+            GoInBrand.showToast('已人工确认人脸');
+        }
+
+        async function generateAvatar() {
+            if (!rawPhotoDataUrl) {
+                GoInBrand.showToast('请先选择照片');
+                return;
+            }
+            if (!gender) {
+                GoInBrand.showToast('请先选择性别');
+                return;
+            }
+            if (!faceOk) {
+                GoInBrand.showToast('请先检测人脸');
+                return;
+            }
+            
+            setStatus('正在生成头像...');
+            
+            // 显示加载动画
+            const preview = document.getElementById('photoPreview');
+            preview.innerHTML = '<div class="loading-spinner"></div>';
+            
+            // 禁用按钮防止重复点击
+            const generateBtn = event.target;
+            const originalText = generateBtn.textContent;
+            generateBtn.disabled = true;
+            generateBtn.textContent = '生成中...';
+            
+            // 模拟生成延迟（实际应该调用 API）
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // 生成头像（简化版：直接使用照片作为头像）
+            avatarDataUrl = rawPhotoDataUrl;
+            
+            // 恢复预览
+            preview.innerHTML = `<img alt="photo" src="${rawPhotoDataUrl}" class="photo-fade-in">`;
+            
+            // 显示头像
+            const avatarImg = document.getElementById('avatarImg');
+            const avatarBox = document.getElementById('avatarBox');
+            avatarImg.src = avatarDataUrl;
+            avatarImg.style.display = 'block';
+            avatarBox.classList.add('avatar-success');
+            
+            // 恢复按钮状态
+            generateBtn.disabled = false;
+            generateBtn.textContent = originalText;
+            
+            // 保存到 localStorage
+            localStorage.setItem('goIn_face_avatar', avatarDataUrl);
+            
+            setStatus('头像生成成功 ✅');
+            GoInBrand.showToast('头像生成成功！');
+            
+            // 显示成功动画
+            setTimeout(() => {
+                avatarBox.classList.remove('avatar-success');
+            }, 1000);
+        }
+
+        async function saveAndEnter() {
+            console.log('=== saveAndEnter 被调用 ===');
+            console.log('rawPhotoDataUrl:', !!rawPhotoDataUrl);
+            console.log('gender:', gender);
+            console.log('avatarDataUrl:', !!avatarDataUrl);
+            
+            // 使用最新的数据（优先使用当前变量，如果没有才用 localStorage）
+            const finalGender = gender || localStorage.getItem('goIn_gender');
+            const finalPhoto = rawPhotoDataUrl || localStorage.getItem('goIn_face_photo');
+            const finalAvatar = avatarDataUrl || localStorage.getItem('goIn_face_avatar');
+            
+            console.log('使用的最新数据:', {
+                gender: finalGender,
+                hasPhoto: !!finalPhoto,
+                hasAvatar: !!finalAvatar
+            });
+            
+            setStatus('正在保存...');
+            console.log('发送请求到 /api/profile_setup...');
+            
+            try {
+                const response = await fetch('/api/profile_setup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        gender: finalGender,
+                        face_photo_data_url: finalPhoto,
+                        face_avatar_data_url: finalAvatar
+                    })
+                });
+                
+                console.log('响应状态:', response.status);
+                const data = await response.json();
+                console.log('响应数据:', data);
+                
+                if (data.success) {
+                    console.log('✅ 成功！准备跳转到 /app_main');
+                    
+                    // 关键修复：保存最新数据到 localStorage
+                    localStorage.setItem('goIn_gender', finalGender);
+                    localStorage.setItem('goIn_face_photo', finalPhoto);
+                    localStorage.setItem('goIn_face_avatar', finalAvatar);
+                    if (data.user_id) {
+                        localStorage.setItem('goIn_user_id', data.user_id);
+                    }
+                    
+                    console.log('✅ 最新数据已保存到 localStorage');
+                    console.log('   gender:', finalGender);
+                    console.log('   photo:', finalPhoto ? finalPhoto.substring(0, 50) + '...' : 'null');
+                    console.log('   avatar:', finalAvatar ? finalAvatar.substring(0, 50) + '...' : 'null');
+                    
+                    GoInBrand.showToast('进入主界面');
+                    setTimeout(() => window.location.href = '/app_main', 360);
+                } else {
+                    console.error('❌ API 返回失败:', data);
+                    setStatus('保存失败：' + (data.message || '未知错误'));
+                    // 即使失败也尝试跳转
+                    setTimeout(() => window.location.href = '/app_main', 1500);
+                }
+            } catch (e) {
+                console.error('❌ 请求失败:', e);
+                setStatus('请求错误：' + e.message);
+                // 即使失败也尝试跳转
+                setTimeout(() => window.location.href = '/app_main', 1500);
+            }
+        }
+
+        async function skipProfileSetup() {
+            if (confirm('确定要跳过头像设置吗？\n\n你将使用默认头像进入主界面。')) {
+                localStorage.setItem('goIn_profile_completed', 'true');
+                localStorage.setItem('goIn_gender', 'other');
+                
+                setStatus('正在跳过...');
+                try {
+                    await fetch('/api/profile_setup', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            gender: 'other',
+                            face_photo_data_url: '',
+                            face_avatar_data_url: ''
+                        })
+                    });
+                } catch (e) {
+                    // 忽略错误
+                }
+                
+                GoInBrand.showToast('已跳过，进入主界面');
+                setTimeout(() => window.location.href = '/app_main', 360);
+            }
+        }
+
+        function setStatus(text) {
+            document.getElementById('statusText').textContent = text || '';
+        }
+
+        function readAsDataUrl(file) {
+            return new Promise((resolve, reject) => {
+                const r = new FileReader();
+                r.onload = () => resolve(r.result);
+                r.onerror = reject;
+                r.readAsDataURL(file);
+            });
+        }
+
+        function dataUrlToImage(dataUrl) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                img.src = dataUrl;
+            });
+        }
+
+        async function renderHandDrawnAvatar(img) {
+            // 生成一张“二维手绘彩色头像”（轻量原型算法）
+            // - 裁剪为圆形头像
+            // - 降色（posterize）+ 边缘线稿（sobel）+ 轻微纸张噪声
+            const size = 360;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+            // 画底色（纸张）
+            ctx.fillStyle = '#fbfbfa';
+            ctx.fillRect(0, 0, size, size);
+
+            // 绘制圆形裁剪的照片
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, size * 0.42, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+
+            const scale = Math.max((size * 0.9) / img.width, (size * 0.9) / img.height);
+            const w = img.width * scale;
+            const h = img.height * scale;
+            ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+            ctx.restore();
+
+            // 取像素并进行降色 + 边缘
+            const imageData = ctx.getImageData(0, 0, size, size);
+            const d = imageData.data;
+
+            // posterize + 提升对比
+            for (let i = 0; i < d.length; i += 4) {
+                const r = d[i], g = d[i + 1], b = d[i + 2], a = d[i + 3];
+                if (a === 0) continue;
+                const pr = Math.round(r / 32) * 32;
+                const pg = Math.round(g / 32) * 32;
+                const pb = Math.round(b / 32) * 32;
+                d[i] = Math.min(255, pr + 8);
+                d[i + 1] = Math.min(255, pg + 8);
+                d[i + 2] = Math.min(255, pb + 8);
+            }
+            ctx.putImageData(imageData, 0, 0);
+
+            // Sobel edge
+            const src = ctx.getImageData(0, 0, size, size);
+            const out = ctx.createImageData(size, size);
+            const sd = src.data, od = out.data;
+
+            function lumAt(x, y) {
+                const idx = (y * size + x) * 4;
+                return sd[idx] * 0.299 + sd[idx + 1] * 0.587 + sd[idx + 2] * 0.114;
+            }
+
+            for (let y = 1; y < size - 1; y++) {
+                for (let x = 1; x < size - 1; x++) {
+                    const gx =
+                        -1 * lumAt(x - 1, y - 1) + 1 * lumAt(x + 1, y - 1) +
+                        -2 * lumAt(x - 1, y)     + 2 * lumAt(x + 1, y) +
+                        -1 * lumAt(x - 1, y + 1) + 1 * lumAt(x + 1, y + 1);
+                    const gy =
+                        -1 * lumAt(x - 1, y - 1) + -2 * lumAt(x, y - 1) + -1 * lumAt(x + 1, y - 1) +
+                         1 * lumAt(x - 1, y + 1) +  2 * lumAt(x, y + 1) +  1 * lumAt(x + 1, y + 1);
+                    const mag = Math.min(255, Math.sqrt(gx * gx + gy * gy));
+                    const idx = (y * size + x) * 4;
+                    // 线稿颜色（深灰），越边缘越不透明
+                    const alpha = Math.max(0, mag - 40);
+                    od[idx] = 25;
+                    od[idx + 1] = 25;
+                    od[idx + 2] = 25;
+                    od[idx + 3] = Math.min(140, alpha);
+                }
+            }
+
+            // 叠加线稿
+            ctx.globalCompositeOperation = 'multiply';
+            ctx.putImageData(out, 0, 0);
+            ctx.globalCompositeOperation = 'source-over';
+
+            // 头像环与品牌点缀
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, size * 0.42 + 3, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(23, 201, 100, 0.8)';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            // 轻噪声
+            const noise = ctx.getImageData(0, 0, size, size);
+            const nd = noise.data;
+            for (let i = 0; i < nd.length; i += 4) {
+                const n = (Math.random() - 0.5) * 6;
+                nd[i] = Math.max(0, Math.min(255, nd[i] + n));
+                nd[i + 1] = Math.max(0, Math.min(255, nd[i + 1] + n));
+                nd[i + 2] = Math.max(0, Math.min(255, nd[i + 2] + n));
+            }
+            ctx.putImageData(noise, 0, 0);
+
+            return canvas.toDataURL('image/png');
+        }
+    </script>
+</body>
+</html>

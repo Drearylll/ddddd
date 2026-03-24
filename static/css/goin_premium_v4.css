@@ -1,0 +1,719 @@
+/**
+ * Go In App - 行业顶级设计系统 v4.0
+ * 参考微信、抖音等成功社交 App
+ * 自然、流畅、真实、有温度
+ */
+
+/* ============================================
+   一、色彩系统 - 自然柔和 + 品牌点缀
+   ============================================ */
+:root {
+    /* 基础中性色 - 参考微信，柔和护眼 */
+    --bg-base: #F7F7F7;
+    --bg-elevated: #FFFFFF;
+    --bg-muted: #F1F1F1;
+    --bg-overlay: rgba(0, 0, 0, 0.4);
+    
+    /* 文字颜色 - 高对比度，易阅读 */
+    --text-primary: #1A1A1A;
+    --text-secondary: #666666;
+    --text-tertiary: #999999;
+    --text-inverse: #FFFFFF;
+    
+    /* 品牌专属色 - 活力点缀 */
+    --brand-primary: #07C160;        /* 微信绿变体 */
+    --brand-accent: #FF6B35;         /* 活力橙 */
+    --brand-gradient: linear-gradient(135deg, #07C160 0%, #00C6FB 100%);
+    --brand-success: #07C160;
+    --brand-warning: #FF8800;
+    --brand-error: #FA5151;          /* 抖音红 */
+    --brand-info: #00C6FB;
+    
+    /* 内容类型色 */
+    --content-video: #FF2D55;        /* 抖音视频色 */
+    --content-music: #00F0FF;        /* 赛博蓝 */
+    --content-text: #07C160;         /* 微信绿 */
+    
+    /* 交互状态色 */
+    --interactive-active: rgba(7, 193, 96, 0.1);
+    --interactive-hover: rgba(7, 193, 96, 0.15);
+    --interactive-pressed: rgba(7, 193, 96, 0.2);
+    
+    /* 描边颜色 */
+    --stroke-light: rgba(0, 0, 0, 0.05);
+    --stroke-medium: rgba(0, 0, 0, 0.1);
+    --stroke-strong: rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================
+   二、字体与排版系统
+   ============================================ */
+:root {
+    /* 字体栈 - 系统优先 */
+    --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
+                  "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", 
+                  "Microsoft YaHei", sans-serif;
+    
+    /* 字号层级 */
+    --font-xs: 11px;
+    --font-sm: 13px;
+    --font-md: 15px;
+    --font-lg: 17px;
+    --font-xl: 20px;
+    --font-2xl: 24px;
+    --font-3xl: 32px;
+    
+    /* 字重 */
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    
+    /* 行距 */
+    --line-height-tight: 1.3;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.6;
+    
+    /* 字间距 */
+    --letter-spacing-tight: -0.2px;
+    --letter-spacing-normal: 0;
+    --letter-spacing-wide: 0.3px;
+}
+
+/* ============================================
+   三、间距与布局系统 - 8px 基准
+   ============================================ */
+:root {
+    /* 统一间距 */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+    --space-16: 64px;
+    
+    /* 圆角系统 - 微立体感 */
+    --radius-none: 0;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 18px;
+    --radius-2xl: 24px;
+    --radius-full: 9999px;
+    
+    /* 阴影层级 - 空间感 */
+    --shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.15);
+    --shadow-inner: inset 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* ============================================
+   四、动画与缓动系统 - 自然物理规律
+   ============================================ */
+:root {
+    /* 缓动函数 - 参考 iOS */
+    --ease-standard: cubic-bezier(0.4, 0.0, 0.2, 1);
+    --ease-decelerate: cubic-bezier(0.0, 0.0, 0.2, 1);
+    --ease-accelerate: cubic-bezier(0.4, 0.0, 1, 1);
+    --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
+    
+    /* 动画时长 */
+    --duration-instant: 100ms;
+    --duration-fast: 200ms;
+    --duration-normal: 300ms;
+    --duration-slow: 400ms;
+    --duration-slower: 500ms;
+}
+
+/* ============================================
+   五、基础样式重置与优化
+   ============================================ */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+body {
+    font-family: var(--font-stack);
+    background: var(--bg-base);
+    color: var(--text-primary);
+    line-height: var(--line-height-normal);
+    letter-spacing: var(--letter-spacing-wide);
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch; /* iOS 平滑滚动 */
+}
+
+/* 禁用用户选择（用于交互元素） */
+.no-select {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ============================================
+   六、移动端容器优化
+   ============================================ */
+.app-mobile {
+    max-width: 520px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: linear-gradient(180deg, 
+        rgba(247, 247, 247, 1) 0%, 
+        rgba(241, 241, 241, 1) 100%
+    );
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* ============================================
+   七、顶部导航栏 - 类微信风格
+   ============================================ */
+.g-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: 56px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 0.5px solid var(--stroke-light);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-4);
+    transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.g-topbar-inner {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.g-logo {
+    font-size: var(--font-lg);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--letter-spacing-wide);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.g-logo-dot {
+    color: var(--brand-primary);
+    font-size: 20px;
+}
+
+.g-topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+/* ============================================
+   八、底部导航栏 - 参考抖音/微信
+   ============================================ */
+.g-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-top: 0.5px solid var(--stroke-light);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding-bottom: env(safe-area-inset-bottom); /* iPhone X 适配 */
+    z-index: 100;
+    transform: translateZ(0); /* GPU 加速 */
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: var(--space-2) var(--space-4);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-standard);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.nav-item:active {
+    transform: scale(0.95);
+}
+
+.nav-icon {
+    font-size: 24px;
+    line-height: 1;
+    transition: transform var(--duration-fast) var(--ease-bounce);
+}
+
+.nav-item.active .nav-icon {
+    color: var(--brand-primary);
+    transform: scale(1.1);
+}
+
+.nav-label {
+    font-size: var(--font-xs);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--letter-spacing-wide);
+}
+
+.nav-item.active .nav-label {
+    color: var(--brand-primary);
+}
+
+/* 未读消息小红点 */
+.nav-badge {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    min-width: 18px;
+    height: 18px;
+    background: var(--brand-error);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: white;
+    font-weight: var(--font-weight-bold);
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+/* ============================================
+   九、内容卡片 - 参考小红书/抖音
+   ============================================ */
+.content-card {
+    background: var(--bg-elevated);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    margin-bottom: var(--space-3);
+    transition: all var(--duration-normal) var(--ease-standard);
+    will-change: transform, box-shadow;
+}
+
+.content-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.content-card:active {
+    transform: scale(0.98);
+    box-shadow: var(--shadow-sm);
+}
+
+.content-card-cover {
+    width: 100%;
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    background: var(--bg-muted);
+}
+
+.content-card-body {
+    padding: var(--space-4);
+}
+
+.content-card-title {
+    font-size: var(--font-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+    line-height: var(--line-height-tight);
+}
+
+.content-card-desc {
+    font-size: var(--font-md);
+    color: var(--text-secondary);
+    line-height: var(--line-height-relaxed);
+    margin-bottom: var(--space-3);
+}
+
+.content-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--stroke-light);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    object-fit: cover;
+    border: 2px solid var(--bg-elevated);
+    box-shadow: var(--shadow-xs);
+}
+
+.user-name {
+    font-size: var(--font-sm);
+    color: var(--text-primary);
+    font-weight: var(--font-weight-medium);
+}
+
+.content-time {
+    font-size: var(--font-xs);
+    color: var(--text-tertiary);
+}
+
+/* ============================================
+   十、互动按钮 - 类抖音点赞效果
+   ============================================ */
+.interaction-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-3) var(--space-4);
+}
+
+.interaction-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-3);
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: var(--font-md);
+    cursor: pointer;
+    border-radius: var(--radius-full);
+    transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.interaction-btn:active {
+    background: var(--bg-muted);
+    transform: scale(0.9);
+}
+
+.interaction-btn.active {
+    color: var(--brand-error);
+}
+
+.interaction-btn-icon {
+    font-size: 20px;
+    transition: transform var(--duration-fast) var(--ease-bounce);
+}
+
+.interaction-btn:active .interaction-btn-icon {
+    transform: scale(1.3);
+}
+
+/* ============================================
+   十一、骨架屏加载 - 平滑过渡
+   ============================================ */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        #f0f0f0 25%,
+        #e0e0e0 50%,
+        #f0f0f0 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-md);
+}
+
+.skeleton-text {
+    height: 16px;
+    margin-bottom: var(--space-2);
+}
+
+.skeleton-image {
+    width: 100%;
+    height: 200px;
+    margin-bottom: var(--space-3);
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ============================================
+   十二、淡入动画 - 内容加载
+   ============================================ */
+.fade-in {
+    animation: fadeIn var(--duration-normal) var(--ease-decelerate);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================
+   十三、页面过渡动画
+   ============================================ */
+.page-enter {
+    animation: slideInRight var(--duration-normal) var(--ease-standard);
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0.9;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.page-exit {
+    animation: slideOutLeft var(--duration-normal) var(--ease-standard);
+}
+
+@keyframes slideOutLeft {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(-20%);
+        opacity: 0.9;
+    }
+}
+
+/* ============================================
+   十四、AI 特色效果 - 品牌独特性
+   ============================================ */
+.ai-glow {
+    position: relative;
+}
+
+.ai-glow::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: radial-gradient(
+        circle at center,
+        rgba(7, 193, 96, 0.2) 0%,
+        transparent 70%
+    );
+    border-radius: inherit;
+    z-index: -1;
+    animation: aiPulse 3s var(--ease-smooth) infinite;
+}
+
+@keyframes aiPulse {
+    0%, 100% {
+        opacity: 0.5;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+}
+
+/* AI 标识徽章 */
+.ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 4px 10px;
+    background: var(--brand-gradient);
+    color: white;
+    border-radius: var(--radius-full);
+    font-size: var(--font-xs);
+    font-weight: var(--font-weight-semibold);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ============================================
+   十五、按钮系统
+   ============================================ */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-6);
+    border: none;
+    border-radius: var(--radius-full);
+    font-size: var(--font-md);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-standard);
+    will-change: transform;
+}
+
+.btn:active {
+    transform: scale(0.96);
+}
+
+.btn-primary {
+    background: var(--brand-gradient);
+    color: white;
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.btn-secondary {
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    border: 1px solid var(--stroke-medium);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--brand-primary);
+}
+
+/* ============================================
+   十六、输入框系统
+   ============================================ */
+.input-group {
+    margin-bottom: var(--space-4);
+}
+
+.input-label {
+    display: block;
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-2);
+    font-weight: var(--font-weight-medium);
+}
+
+.input-field {
+    width: 100%;
+    height: 48px;
+    padding: 0 var(--space-4);
+    border: 1px solid var(--stroke-medium);
+    border-radius: var(--radius-lg);
+    background: var(--bg-elevated);
+    color: var(--text-primary);
+    font-size: var(--font-md);
+    transition: all var(--duration-fast) var(--ease-standard);
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px var(--interactive-active);
+}
+
+.input-field::placeholder {
+    color: var(--text-tertiary);
+}
+
+/* ============================================
+   十七、工具类 - 快速开发
+   ============================================ */
+/* 弹性布局 */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: var(--space-2); }
+.gap-4 { gap: var(--space-4); }
+
+/* 文字对齐 */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+/* 边距 */
+.mt-4 { margin-top: var(--space-4); }
+.mb-4 { margin-bottom: var(--space-4); }
+.p-4 { padding: var(--space-4); }
+
+/* 显示控制 */
+.hidden { display: none; }
+.block { display: block; }
+.inline-block { display: inline-block; }
+
+/* ============================================
+   十八、性能优化
+   ============================================ */
+/* GPU 加速 */
+.gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
+
+/* 避免重绘 */
+.no-reflow {
+    contain: layout style paint;
+}
+
+/* 图片懒加载占位 */
+img[loading="lazy"] {
+    background: var(--bg-muted);
+}
+
+/* ============================================
+   十九、安全区域适配（iPhone X+）
+   ============================================ */
+.safe-area-top {
+    padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-area-left {
+    padding-left: env(safe-area-inset-left);
+}
+
+.safe-area-right {
+    padding-right: env(safe-area-inset-right);
+}
+
+/* ============================================
+   二十、暗黑模式支持（预留）
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* 可在未来扩展暗黑模式 */
+    }
+}
