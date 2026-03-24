@@ -1,0 +1,5 @@
+<svg width="400" height="600" xmlns="http://www.w3.org/2000/svg">
+  <rect width="400" height="600" fill="#1e322a"/>
+  <text x="200" y="280" font-family="Arial" font-size="24" fill="#96c8b0" text-anchor="middle">街头人物素材</text>
+  <text x="200" y="320" font-family="Arial" font-size="14" fill="#64907c" text-anchor="middle">character_street</text>
+</svg>
