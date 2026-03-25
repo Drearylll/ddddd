@@ -21,8 +21,15 @@ app.secret_key = 'goin_immersive_mvp_2026'
 # 数据库配置
 app.config.update(DB_CONFIG)
 
-# 初始化数据库
-init_db(app)
+# 延迟初始化数据库（在第一次请求时）
+db_initialized = False
+
+def ensure_db_initialized():
+    """确保数据库已初始化（仅在第一次调用时）"""
+    global db_initialized
+    if not db_initialized:
+        init_db(app)
+        db_initialized = True
 
 # 无感多用户隔离：服务器端数据存储
 # 使用字典存储所有用户数据，key 为 user_id（作为缓存）
@@ -31,6 +38,9 @@ USER_DATA_STORE = {}
 @app.before_request
 def load_user_from_cookie():
     """从 Cookie 加载用户 ID（如果存在）"""
+    # 确保数据库已初始化
+    ensure_db_initialized()
+    
     user_id = request.cookies.get('user_id')
     if user_id and 'user_id' not in session:
         session['user_id'] = user_id
