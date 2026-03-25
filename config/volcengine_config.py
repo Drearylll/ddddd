@@ -9,14 +9,17 @@ API 文档：
 https://www.volcengine.com/docs
 """
 
+import os
+
 # 火山引擎 API 配置
-VOLCENGINE_API_KEY = "de012cdc-ddcb-4695-a362-a67e26d5dcda"  # 火山引擎 API Key（已更新）
-VOLCENGINE_API_SECRET = ""  # API Secret（如有需要请补充）
-VOLCENGINE_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"  # 火山引擎方舟大模型 API
+# 优先从环境变量读取，如果没有则使用硬编码值（本地开发）
+VOLCENGINE_API_KEY = os.getenv("VOLCENGINE_API_KEY", "de012cdc-ddcb-4695-a362-a67e26d5dcda")
+VOLCENGINE_API_SECRET = os.getenv("VOLCENGINE_API_SECRET", "")
+VOLCENGINE_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
 
 # 豆包大模型配置（Doubao）
 # 豆包是字节推出的多功能大模型，支持文本、图像、语音等多模态任务
-DOUBAO_API_KEY = "de012cdc-ddcb-4695-a362-a67e26d5dcda"  # 豆包 API Key
+DOUBAO_API_KEY = os.getenv("DOUBAO_API_KEY", "de012cdc-ddcb-4695-a362-a67e26d5dcda")
 DOUBAO_BASE_URL = "https://ark.cn-beijing.volces.com/api/v3"
 
 # 豆包模型版本（已更新为真实可用的模型）

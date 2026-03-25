@@ -13,14 +13,15 @@ https://lbs.amap.com/api/webservice/guide/api/search
 https://lbs.amap.com/api/webservice/guide/api/placeinfo
 """
 
+import os
 import requests
 import random
 import re
 from typing import List, Dict, Optional
 
-# API 配置（可配置环境变量）
-GAODE_API_KEY = "2274b3d46339f95092d68b83150ead7f"  # 高德地图 Web 服务 API Key（已更新）
-GAODE_API_SECRET = ""  # 安全密钥（可选）
+# API 配置（优先从环境变量读取）
+GAODE_API_KEY = os.getenv("GAODE_KEY", "2274b3d46339f95092d68b83150ead7f")
+GAODE_API_SECRET = os.getenv("GAODE_API_SECRET", "")
 GAODE_API_URL = "https://restapi.amap.com/v3/place/around"  # 周边搜索
 GAODE_GEO_URL = "https://restapi.amap.com/v3/geocode/geo"  # 地理编码
 GAODE_PLACE_INFO_URL = "https://restapi.amap.com/v3/place/info"  # 地点详情

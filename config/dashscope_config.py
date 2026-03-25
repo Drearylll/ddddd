@@ -3,20 +3,23 @@
 Go In App - AI 绘画服务配置
 """
 
+import os
+
 # 阿里云百炼 API 配置
-DASHSCOPE_API_KEY = "sk-2274b3d46339f95092d68b83150ead7f"  # 阿里云百炼 API Key（已更新）
+# 优先从环境变量读取，如果没有则使用硬编码值（本地开发）
+DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY", "sk-2274b3d46339f95092d68b83150ead7f")
 DASHSCOPE_BASE_URL = "https://dashscope.aliyuncs.com/api/v1"
 
 # 通义万相 API（AI 绘画）
-WANXIANG_API_KEY = "sk-2274b3d46339f95092d68b83150ead7f"  # 通义万相 API Key（已更新）
+WANXIANG_API_KEY = os.getenv("WANXIANG_API_KEY", "sk-2274b3d46339f95092d68b83150ead7f")
 WANXIANG_BASE_URL = "https://dashscope.aliyuncs.com/api/v1/services/aigc/image-generation"
 
 # 通义千问 API（文案生成）
-QWEN_API_KEY = "sk-2274b3d46339f95092d68b83150ead7f"  # 通义千问 API Key（已更新）
+QWEN_API_KEY = os.getenv("QWEN_API_KEY", "sk-2274b3d46339f95092d68b83150ead7f")
 QWEN_BASE_URL = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation"
 
 # 通义千问 VL API（多模态图像分析）
-QWEN_VL_API_KEY = "sk-2274b3d46339f95092d68b83150ead7f"  # 通义千问 VL API Key（已更新）
+QWEN_VL_API_KEY = os.getenv("QWEN_VL_API_KEY", "sk-2274b3d46339f95092d68b83150ead7f")
 QWEN_VL_BASE_URL = "https://dashscope.aliyuncs.com/api/v1/services/aigc/multimodal-generation"
 
 # 模型配置（已更新为真实可用的模型）
