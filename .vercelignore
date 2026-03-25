@@ -1,0 +1,37 @@
+# Vercel 忽略文件配置
+# 这些文件不会被 Vercel 构建系统处理
+
+# 文档目录
+docs/
+*.md
+
+# 测试文件
+tests/
+dev/
+
+# 数据库和数据
+*.db
+data/
+user_data/
+
+# 缓存和临时文件
+__pycache__/
+*.pyc
+*.pyo
+.env
+.env.local
+
+# IDE 配置
+.vscode/
+.idea/
+.lingma/
+.cursor/
+
+# Git
+.git/
+.gitignore
+
+# 其他
+Procfile
+deploy.bat
+verify_project.py

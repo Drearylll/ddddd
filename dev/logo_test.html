@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#7B57D6">
+    <title>Go In - Logo 测试</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #1a1a1a;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .test-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .test-card h2 {
+            color: #7B57D6;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .test-card p {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .logo-test {
+            margin: 20px 0;
+        }
+        
+        .logo-main {
+            max-width: 280px;
+            width: 100%;
+            height: auto;
+            filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.15));
+            transition: transform 0.3s ease;
+        }
+        
+        .logo-main:hover {
+            transform: scale(1.05);
+        }
+        
+        .logo-small {
+            width: 64px;
+            height: 64px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid #7B57D6;
+            box-shadow: 0 8px 20px rgba(123, 87, 214, 0.3);
+        }
+        
+        .logo-banner {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            border-radius: 16px;
+        }
+        
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .info-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .info-section h2 {
+            color: #7B57D6;
+            margin-bottom: 20px;
+        }
+        
+        .info-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .info-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            color: #333;
+        }
+        
+        .info-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .brand-colors {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .color-swatch {
+            flex: 1;
+            min-width: 120px;
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .color-purple-light {
+            background: #B8A5EB;
+        }
+        
+        .color-purple-main {
+            background: #7B57D6;
+        }
+        
+        .color-purple-dark {
+            background: #4B349E;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .test-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Go In Logo 集成测试</h1>
+        
+        <div class="test-grid">
+            <!-- 测试 1：主 Logo -->
+            <div class="test-card">
+                <h2>主 Logo 展示</h2>
+                <p>标准尺寸（最大 280px）</p>
+                <div class="logo-test">
+                    <img src="/static/images/logo.png" alt="Go In Logo" class="logo-main" 
+                         onerror="this.onerror=null; this.nextElementSibling.textContent='❌ 加载失败'; this.classList.add('hidden');">
+                    <div class="status" style="display:none;">✅ 加载成功</div>
+                </div>
+                <script>
+                    document.querySelector('.logo-main').onload = function() {
+                        this.nextElementSibling.style.display = 'block';
+                        this.nextElementSibling.classList.add('success');
+                        this.nextElementSibling.textContent = '✅ 加载成功';
+                    };
+                    document.querySelector('.logo-main').onerror = function() {
+                        this.nextElementSibling.style.display = 'block';
+                        this.nextElementSibling.classList.add('error');
+                        this.nextElementSibling.textContent = '❌ 加载失败';
+                    };
+                </script>
+            </div>
+            
+            <!-- 测试 2：小图标 -->
+            <div class="test-card">
+                <h2>小图标（Favicon）</h2>
+                <p>64x64 尺寸</p>
+                <div class="logo-test">
+                    <img src="/static/images/logo.png" alt="Logo Small" class="logo-small"
+                         onerror="this.onerror=null; this.nextElementSibling.textContent='❌ 加载失败';">
+                    <div class="status" style="display:none;"></div>
+                </div>
+                <script>
+                    document.querySelector('.logo-small').onload = function() {
+                        this.nextElementSibling.style.display = 'block';
+                        this.nextElementSibling.classList.add('success');
+                        this.nextElementSibling.textContent = '✅ 加载成功';
+                    };
+                    document.querySelector('.logo-small').onerror = function() {
+                        this.nextElementSibling.style.display = 'block';
+                        this.nextElementSibling.classList.add('error');
+                        this.nextElementSibling.textContent = '❌ 加载失败';
+                    };
+                </script>
+            </div>
+            
+            <!-- 测试 3：头像样式 -->
+            <div class="test-card">
+                <h2>头像样式</h2>
+                <p>圆形头像（120x120）</p>
+                <div class="logo-test">
+                    <img src="/static/images/logo.png" alt="Logo Avatar" class="logo-avatar"
+                         onerror="this.onerror=null; this.nextElementSibling.textContent='❌ 加载失败';">
+                    <div class="status" style="display:none;"></div>
+                </div>
+                <script>
+                    document.querySelector('.logo-avatar').onload = function() {
+                        this.nextElementSibling.style.display = 'block';
+                        this.nextElementSibling.classList.add('success');
+                        this.nextElementSibling.textContent = '✅ 加载成功';
+                    };
+                    document.querySelector('.logo-avatar').onerror = function() {
+                        this.nextElementSibling.style.display = 'block';
+                        this.nextElementSibling.classList.add('error');
+                        this.nextElementSibling.textContent = '❌ 加载失败';
+                    };
+                </script>
+            </div>
+            
+            <!-- 测试 4：横幅样式 -->
+            <div class="test-card">
+                <h2>横幅样式</h2>
+                <p>宽屏展示</p>
+                <div class="logo-test">
+                    <img src="/static/images/logo.png" alt="Logo Banner" class="logo-banner"
+                         onerror="this.onerror=null; this.nextElementSibling.textContent='❌ 加载失败';">
+                    <div class="status" style="display:none;"></div>
+                </div>
+                <script>
+                    document.querySelector('.logo-banner').onload = function() {
+                        this.nextElementSibling.style.display = 'block';
+                        this.nextElementSibling.classList.add('success');
+                        this.nextElementSibling.textContent = '✅ 加载成功';
+                    };
+                    document.querySelector('.logo-banner').onerror = function() {
+                        this.nextElementSibling.style.display = 'block';
+                        this.nextElementSibling.classList.add('error');
+                        this.nextElementSibling.textContent = '❌ 加载失败';
+                    };
+                </script>
+            </div>
+        </div>
+        
+        <!-- 品牌信息 -->
+        <div class="info-section">
+            <h2>📋 品牌信息</h2>
+            <ul class="info-list">
+                <li><strong>文件路径：</strong> /static/images/logo.png</li>
+                <li><strong>文件大小：</strong> 661.3 KB</li>
+                <li><strong>主题色：</strong> #7B57D6（品牌紫）</li>
+                <li><strong>Favicon：</strong> 已配置</li>
+                <li><strong>Apple Touch Icon：</strong> 已配置</li>
+            </ul>
+            
+            <h3 style="margin-top: 30px; color: #7B57D6;">🎨 品牌色系</h3>
+            <div class="brand-colors">
+                <div class="color-swatch color-purple-light">
+                    #B8A5EB<br>浅紫
+                </div>
+                <div class="color-swatch color-purple-main">
+                    #7B57D6<br>主紫
+                </div>
+                <div class="color-swatch color-purple-dark">
+                    #4B349E<br>深紫
+                </div>
+            </div>
+        </div>
+        
+        <!-- 使用说明 -->
+        <div class="info-section">
+            <h2>✅ 下一步操作</h2>
+            <ul class="info-list">
+                <li>1. 访问欢迎页面：<a href="/templates/welcome_premium.html" style="color: #7B57D6; font-weight: 600;">点击这里</a></li>
+                <li>2. 检查 Logo 在欢迎页面的实际效果</li>
+                <li>3. 测试移动端响应式效果</li>
+                <li>4. 验证 PWA 安装后的图标显示</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

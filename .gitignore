@@ -45,14 +45,17 @@ Thumbs.db
 .env
 .flaskenv
 
-# User data (optional, if you want to exclude user files)
-# user_data/*.json
+# User data and database
+data/
+user_data/
+*.db
 
-# Development files
-dev/
+# Documentation
+docs/
 *.md.bak
 *.tmp
 
 # Test files
+tests/
 test_*.py
 *_test.py
