@@ -1,5 +1,15 @@
+# Web 框架
 Flask==3.0.0
+
+# 数据库 ORM
 Flask-SQLAlchemy==3.1.1
 SQLAlchemy==2.0.23
-gunicorn==21.2.0
-requests==2.31.0 
+
+# 图像处理（AI 绘画、头像处理、背景移除）
+Pillow==10.2.0
+
+# HTTP 请求（API 调用）
+requests==2.31.0
+
+# WSGI 服务器（Vercel 部署）
+gunicorn==21.2.0 
