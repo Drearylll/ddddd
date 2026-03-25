@@ -7,6 +7,11 @@ from flask import Flask, render_template_string, render_template, session, redir
 from datetime import datetime, timedelta
 import random
 import uuid
+import logging
+
+# 配置日志
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # 导入数据库配置和服务
 from config.db_config import DB_CONFIG
@@ -14,6 +19,8 @@ from services.database import db, init_db, get_or_create_user, save_user_data as
 
 # 导入服务层
 from services import ContentGenerator, UserManager
+
+logger.info("🚀 Go In 应用启动中...")
 
 app = Flask(__name__)
 app.secret_key = 'goin_immersive_mvp_2026'
@@ -28,8 +35,15 @@ def ensure_db_initialized():
     """确保数据库已初始化（仅在第一次调用时）"""
     global db_initialized
     if not db_initialized:
-        init_db(app)
-        db_initialized = True
+        try:
+            logger.info("🔧 开始初始化数据库...")
+            init_db(app)
+            db_initialized = True
+            logger.info("✅ 数据库初始化成功")
+        except Exception as e:
+            logger.error(f"❌ 数据库初始化失败：{str(e)}")
+            logger.exception("详细错误堆栈:")
+            raise  # 重新抛出异常，让 Vercel 显示错误
 
 # 无感多用户隔离：服务器端数据存储
 # 使用字典存储所有用户数据，key 为 user_id（作为缓存）
@@ -38,13 +52,18 @@ USER_DATA_STORE = {}
 @app.before_request
 def load_user_from_cookie():
     """从 Cookie 加载用户 ID（如果存在）"""
-    # 确保数据库已初始化
-    ensure_db_initialized()
-    
-    user_id = request.cookies.get('user_id')
-    if user_id and 'user_id' not in session:
-        session['user_id'] = user_id
-        print(f"✅ 从 Cookie 加载用户 ID: {user_id[:8]}...")
+    try:
+        # 确保数据库已初始化
+        ensure_db_initialized()
+        
+        user_id = request.cookies.get('user_id')
+        if user_id and 'user_id' not in session:
+            session['user_id'] = user_id
+            logger.info(f"✅ 从 Cookie 加载用户 ID: {user_id[:8]}...")
+    except Exception as e:
+        logger.error(f"❌ 加载用户失败：{str(e)}")
+        logger.exception("详细错误:")
+        raise
 
 def get_or_create_user_id():
     """获取或创建用户 ID（隐式、无感知）"""
