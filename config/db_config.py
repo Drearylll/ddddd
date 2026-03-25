@@ -6,8 +6,15 @@ Go In App - SQLite + SQLAlchemy
 import os
 
 # 数据库配置
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE_PATH = os.path.join(BASE_DIR, 'goin.db')
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # 项目根目录
+
+# Vercel 部署时使用临时目录，本地开发使用项目目录
+if os.getenv('VERCEL'):
+    # Vercel 环境：使用内存数据库或临时目录
+    DATABASE_PATH = '/tmp/goin.db'
+else:
+    # 本地环境：使用项目目录
+    DATABASE_PATH = os.path.join(BASE_DIR, 'goin.db')
 
 # SQLAlchemy 配置
 SQLALCHEMY_DATABASE_URI = f'sqlite:///{DATABASE_PATH}'
