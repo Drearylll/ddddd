@@ -136,7 +136,12 @@ class CoCreateRecord(db.Model):
 # ========== 数据库操作辅助函数 ==========
 
 def init_db(app):
-    """初始化数据库"""
+    """初始化数据库（带保护，避免重复初始化）"""
+    # 检查是否已经初始化
+    if hasattr(app, 'extensions') and 'sqlalchemy' in app.extensions:
+        print("⚠️  数据库已初始化，跳过")
+        return
+    
     db.init_app(app)
     with app.app_context():
         db.create_all()

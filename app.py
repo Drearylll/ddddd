@@ -45,6 +45,8 @@ def ensure_db_initialized():
             logger.exception("详细错误堆栈:")
             raise  # 重新抛出异常，让 Vercel 显示错误
 
+# 注意：不在这里调用 init_db(app)，而是在第一次请求时调用
+
 # 无感多用户隔离：服务器端数据存储
 # 使用字典存储所有用户数据，key 为 user_id（作为缓存）
 USER_DATA_STORE = {}
