@@ -3526,16 +3526,19 @@ def api_generate_more_content():
 # ============================================
 # 启动
 # ============================================
+# 启动应用
+# ============================================
 
+# 仅在本地开发环境运行调试服务器
+# Vercel 部署时使用 WSGI 自动检测 app 对象，不需要 app.run()
 if __name__ == '__main__':
-    print("Go In Immersive MVP Starting...")
-    print("URL: http://localhost:5000")
-    print("\nDefault City: Shanghai Pudong")
-    print("Feature: Light Personalization (3 quick choices)")
-    print("Click 'It Continues' to see new content")
-    # 开启 debug 模式以便查看详细错误
-    # 本地开发环境入口
-    if __name__ == '__main__':
-        # 仅在本地开发环境运行调试服务器
-        # Vercel 部署时使用 WSGI 自动检测 app 对象
+    import os
+    # 检测是否在 Vercel 环境
+    if not os.environ.get('VERCEL'):
+        print("Go In Immersive MVP Starting...")
+        print("URL: http://localhost:5000")
+        print("\nDefault City: Shanghai Pudong")
+        print("Feature: Light Personalization (3 quick choices)")
+        print("Click 'It Continues' to see new content")
+        # 仅在非 Vercel 环境启动调试服务器
         app.run(debug=True, host='0.0.0.0', port=5000)
