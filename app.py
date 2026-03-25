@@ -28,24 +28,10 @@ app.secret_key = 'goin_immersive_mvp_2026'
 # 数据库配置
 app.config.update(DB_CONFIG)
 
-# 延迟初始化数据库（在第一次请求时）
-db_initialized = False
-
-def ensure_db_initialized():
-    """确保数据库已初始化（仅在第一次调用时）"""
-    global db_initialized
-    if not db_initialized:
-        try:
-            logger.info("🔧 开始初始化数据库...")
-            init_db(app)
-            db_initialized = True
-            logger.info("✅ 数据库初始化成功")
-        except Exception as e:
-            logger.error(f"❌ 数据库初始化失败：{str(e)}")
-            logger.exception("详细错误堆栈:")
-            raise  # 重新抛出异常，让 Vercel 显示错误
-
-# 注意：不在这里调用 init_db(app)，而是在第一次请求时调用
+# 立即初始化数据库（在应用启动时）
+logger.info("🔧 开始初始化数据库...")
+init_db(app)
+logger.info("✅ 数据库初始化成功")
 
 # 无感多用户隔离：服务器端数据存储
 # 使用字典存储所有用户数据，key 为 user_id（作为缓存）
@@ -55,9 +41,7 @@ USER_DATA_STORE = {}
 def load_user_from_cookie():
     """从 Cookie 加载用户 ID（如果存在）"""
     try:
-        # 确保数据库已初始化
-        ensure_db_initialized()
-        
+        # 数据库已在应用启动时初始化，无需再次调用
         user_id = request.cookies.get('user_id')
         if user_id and 'user_id' not in session:
             session['user_id'] = user_id
