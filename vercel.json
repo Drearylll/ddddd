@@ -17,7 +17,8 @@
     "VERCEL": "true",
     "PYTHON_VERSION": "3.12",
     "SECRET_KEY": "goin_immersive_mvp_2026_vercel_key",
-    "DATABASE_URL": "sqlite:///:memory:"
+    "DATABASE_URL": "sqlite:///:memory:",
+    "FORCE_REBUILD": "20260326"
   },
   "functions": {
     "app.py": {
