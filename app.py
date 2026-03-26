@@ -48,6 +48,17 @@ except Exception as e:
     ContentGenerator = None
     UserManager = None
 
+# 4. 数据模型
+try:
+    from models import UserIntent, Moment, Like, Comment
+    logger.info("✅ 成功导入数据模型")
+except Exception as e:
+    logger.error(f"❌ 导入数据模型失败：{str(e)}")
+    UserIntent = None
+    Moment = None
+    Like = None
+    Comment = None
+
 # ========== 环境变量安全化 ==========
 SECRET_KEY = os.getenv('SECRET_KEY', 'goin_immersive_mvp_2026_fallback_key')
 VERCEL_ENV = os.getenv('VERCEL', 'false').lower() == 'true'
@@ -3868,6 +3879,342 @@ def api_generate_more_content():
     except Exception as e:
         print(f"[ERROR] Failed to generate content: {e}")
         return jsonify({'error': str(e)}), 500
+
+# ============================================
+# 【Go】聊天功能 - AI 朋友对话
+# ============================================
+
+# DeepSeek API 配置
+DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+DEEPSEEK_API_URL = "https://api.deepseek.com/v1/chat/completions"
+
+# Go 的人设 Prompt
+GO_SYSTEM_PROMPT = """你是一个温暖的 AI 朋友，名叫"Go"。
+你的任务是倾听用户的心声，理解他们的想法和感受。
+
+当用户表达想去某地、想做某事时，你要敏锐地捕捉这些意图，并在回复中自然地回应。
+
+例如：
+- "最近好想去海边散步" -> 意图：想去海边，情绪：放松
+- "想找个安静的地方看书" -> 意图：想找安静地方，活动：阅读
+- "今天心情不太好" -> 情绪：低落，需要安慰
+
+要求：
+1. 语气温柔、温暖，像朋友间的对话
+2. 不要说教，而是理解和陪伴
+3. 如果捕捉到用户的意图（想去某地/想做某事），要在回复中自然地提及
+4. 回复长度控制在 50-100 字之间
+5. 可以适当使用 emoji 增强情感表达
+"""
+
+@app.route('/go')
+def go_chat_page():
+    """【Go】聊天页面"""
+    user_data = get_user_data()
+    
+    # 检查是否完成引导
+    onboarding_completed = user_data.get('onboarding_completed', False)
+    if not onboarding_completed:
+        return redirect(url_for('onboarding'))
+    
+    return render_template('go_chat.html')
+
+@app.route('/api/go_chat', methods=['POST'])
+def api_go_chat():
+    """
+    API: Go 聊天对话
+    
+    Request:
+        - message: str (用户消息)
+        - settings: dict (可选，AI 性格设置)
+        
+    Response:
+        - success: bool
+        - reply: str (AI 回复)
+        - intent: dict (识别的意图，如果有)
+    """
+    try:
+        data = request.get_json() or {}
+        user_message = data.get('message', '')
+        settings = data.get('settings', {})
+        
+        if not user_message:
+            return jsonify({
+                'success': False,
+                'message': '消息不能为空'
+            }), 400
+        
+        print(f"💬 收到用户消息：{user_message}")
+        
+        # 构建个性化 System Prompt
+        personality = settings.get('personality', 'warm')
+        style = settings.get('style', 'casual')
+        
+        personality_prompts = {
+            'warm': '你性格温暖治愈，善于倾听和安慰人',
+            'active': '你活力阳光，总是用积极的态度感染别人',
+            'thoughtful': '你深度思考，喜欢探讨问题的本质',
+            'humorous': '你幽默风趣，总能让对话变得轻松愉快'
+        }
+        
+        style_prompts = {
+            'casual': '对话风格轻松随意，像老朋友聊天',
+            'formal': '对话风格正式礼貌，保持适度距离',
+            'intimate': '对话风格亲密，像最好的朋友'
+        }
+        
+        full_system_prompt = (
+            f"{GO_SYSTEM_PROMPT}\n\n"
+            f"当前性格：{personality_prompts.get(personality, '')}\n"
+            f"对话风格：{style_prompts.get(style, '')}"
+        )
+        
+        # 调用 DeepSeek API
+        if DEEPSEEK_API_KEY:
+            reply, intent_data = call_deepseek_api(full_system_prompt, user_message)
+        else:
+            # 无 API Key 时使用模拟回复
+            reply, intent_data = mock_go_reply(user_message)
+        
+        print(f"🤖 AI 回复：{reply}")
+        if intent_data:
+            print(f"🎯 识别意图：{intent_data}")
+            # 保存意图到数据库（用于后续生成打卡照）
+            save_user_intent(session.get('user_id'), intent_data)
+        
+        return jsonify({
+            'success': True,
+            'reply': reply,
+            'intent': intent_data
+        })
+        
+    except Exception as e:
+        print(f"❌ 聊天 API 失败：{e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': f'服务器错误：{str(e)}'
+        }), 500
+
+
+def call_deepseek_api(system_prompt, user_message):
+    """
+    调用 DeepSeek API 进行对话和意图识别
+    
+    Args:
+        system_prompt: 系统提示词
+        user_message: 用户消息
+        
+    Returns:
+        tuple: (ai_reply, intent_data)
+    """
+    try:
+        import requests
+        
+        headers = {
+            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        # 定义函数调用 schema（用于意图识别）
+        functions = [{
+            "name": "extract_intent",
+            "description": "Extract user's intention and keywords from the conversation",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "intent_type": {
+                        "type": "string",
+                        "enum": ["want_to_visit", "want_to_do", "mood", "other"],
+                        "description": "Type of intention"
+                    },
+                    "location": {
+                        "type": "string",
+                        "description": "Location mentioned (e.g., 海边，图书馆)"
+                    },
+                    "activity": {
+                        "type": "string",
+                        "description": "Activity mentioned (e.g., 散步，看书)"
+                    },
+                    "mood": {
+                        "type": "string",
+                        "description": "Emotional state (e.g., 开心，低落)"
+                    },
+                    "keywords": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Key words from the conversation"
+                    }
+                },
+                "required": ["intent_type"]
+            }
+        }]
+        
+        payload = {
+            "model": "deepseek-chat",
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_message}
+            ],
+            "functions": functions,
+            "temperature": 0.8,
+            "max_tokens": 200
+        }
+        
+        response = requests.post(
+            DEEPSEEK_API_URL,
+            json=payload,
+            headers=headers,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            ai_message = result['choices'][0]['message']
+            
+            # 提取回复
+            reply = ai_message.get('content', '')
+            
+            # 提取意图（如果有函数调用）
+            intent_data = None
+            if ai_message.get('function_call'):
+                try:
+                    intent_data = json.loads(ai_message['function_call']['arguments'])
+                except:
+                    pass
+            
+            return reply, intent_data
+        else:
+            print(f"DeepSeek API 错误：HTTP {response.status_code}")
+            return mock_go_reply(user_message)
+            
+    except Exception as e:
+        print(f"DeepSeek API 调用失败：{e}")
+        return mock_go_reply(user_message)
+
+
+def mock_go_reply(user_message):
+    """
+    模拟 Go 回复（无 API Key 时的 fallback）
+    
+    Args:
+        user_message: 用户消息
+        
+    Returns:
+        tuple: (reply, intent_data)
+    """
+    # 简单的关键词匹配
+    message_lower = user_message.lower()
+    
+    intent_data = None
+    reply = ""
+    
+    # 地点相关
+    if any(kw in message_lower for kw in ['想去', '要去', '到', '海边', '图书馆', '公园', '咖啡馆']):
+        intent_data = {
+            'intent_type': 'want_to_visit',
+            'location': extract_location(message_lower),
+            'activity': extract_activity(message_lower),
+            'mood': '期待'
+        }
+        reply = f"听起来是个很棒的地方呢！{intent_data['location']}确实值得一去～ 要不要我帮你规划一下？✨"
+    
+    # 活动相关
+    elif any(kw in message_lower for kw in ['想', '要做', '打算', '看书', '跑步', '喝咖啡']):
+        intent_data = {
+            'intent_type': 'want_to_do',
+            'activity': extract_activity(message_lower),
+            'mood': '期待'
+        }
+        reply = f"做自己喜欢的事情最开心了！{intent_data['activity']}听起来很有意思呢 💪"
+    
+    # 情绪相关
+    elif any(kw in message_lower for kw in ['心情', '开心', '难过', '累', '烦', '无聊']):
+        intent_data = {
+            'intent_type': 'mood',
+            'mood': extract_mood(message_lower)
+        }
+        reply = f"我能理解你的感受呢。不管怎样，我都会陪着你的 🤗"
+    
+    # 其他
+    else:
+        intent_data = {
+            'intent_type': 'other',
+            'keywords': user_message.split()[:5]
+        }
+        reply = "嗯嗯，我在听呢！继续说下去吧～ 👂"
+    
+    return reply, intent_data
+
+
+def extract_location(message):
+    """从消息中提取地点"""
+    locations = ['海边', '图书馆', '公园', '咖啡馆', '书店', '山里', '河边', '电影院', '餐厅']
+    for loc in locations:
+        if loc in message:
+            return loc
+    return '某个地方'
+
+
+def extract_activity(message):
+    """从消息中提取活动"""
+    activities = ['散步', '看书', '跑步', '喝咖啡', '拍照', '发呆', '聊天', '吃饭']
+    for act in activities:
+        if act in message:
+            return act
+    return '做些有趣的事'
+
+
+def extract_mood(message):
+    """从消息中提取情绪"""
+    if any(kw in message for kw in ['开心', '高兴', '爽']):
+        return '开心'
+    elif any(kw in message for kw in ['难过', '伤心', '烦']):
+        return '低落'
+    elif any(kw in message for kw in ['累', '疲惫']):
+        return '疲惫'
+    elif any(kw in message for kw in ['无聊', '没意思']):
+        return '无聊'
+    else:
+        return '平静'
+
+
+def save_user_intent(user_id, intent_data):
+    """
+    保存用户意图到数据库（用于后续生成打卡照）
+    
+    Args:
+        user_id: 用户 ID
+        intent_data: 意图数据
+    """
+    try:
+        from services.database import db
+        from models import UserIntent
+        
+        if not user_id:
+            return
+        
+        # 创建意图记录
+        intent = UserIntent(
+            user_id=user_id,
+            intent_type=intent_data.get('intent_type', 'other'),
+            location=intent_data.get('location'),
+            activity=intent_data.get('activity'),
+            mood=intent_data.get('mood'),
+            keywords=json.dumps(intent_data.get('keywords', [])),
+            raw_data=json.dumps(intent_data)
+        )
+        
+        db.session.add(intent)
+        db.session.commit()
+        
+        print(f"✅ 已保存用户意图：{intent_data}")
+        
+    except Exception as e:
+        print(f"❌ 保存意图失败：{e}")
+        # 不阻断主流程
+
 
 # ============================================
 # 启动
