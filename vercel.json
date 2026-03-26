@@ -18,7 +18,8 @@
     "PYTHON_VERSION": "3.12",
     "SECRET_KEY": "goin_immersive_mvp_2026_vercel_key",
     "DATABASE_URL": "sqlite:///:memory:",
-    "FORCE_REBUILD": "20260326"
+    "FORCE_REBUILD": "20260326_0815",
+    "BUILD_ID": "FORCE_REBUILD_PILLOW_FIX_20260326"
   },
   "functions": {
     "app.py": {
