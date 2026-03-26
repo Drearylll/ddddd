@@ -3884,10 +3884,19 @@ def api_generate_more_content():
 # 【Go】聊天功能 - AI 朋友对话
 # ============================================
 
-# 火山引擎 - 豆包 API 配置（使用免费额度）
+# 火山引擎 - 豆包 API 配置
 DOUBAO_API_KEY = os.getenv("DOUBAO_API_KEY", "")
 DOUBAO_API_URL = "https://ark.cn-beijing.volces.com/api/v3/responses"
 DOUBAO_MODEL = "doubao-seed-2-0-pro-260215"
+
+# 阿里云百炼 - 通义千问 API 配置（使用兼容模式 v1 接口）
+QWEN_API_KEY = os.getenv("QWEN_API_KEY", "")
+QWEN_BASE_URL = os.getenv("QWEN_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1")
+QWEN_CHAT_URL = f"{QWEN_BASE_URL}/chat/completions"
+QWEN_MODEL = "qwen-plus"  # 或 qwen-turbo, qwen-max
+
+# AI 服务选择（优先使用哪个 API）
+PREFERRED_AI_PROVIDER = os.getenv("PREFERRED_AI_PROVIDER", "qwen")
 
 # Go 的人设 Prompt
 GO_SYSTEM_PROMPT = """你是一个温暖的 AI 朋友，名叫"Go"。
@@ -3970,11 +3979,17 @@ def api_go_chat():
             f"对话风格：{style_prompts.get(style, '')}"
         )
         
-        # 调用豆包 API
-        if DOUBAO_API_KEY:
+        # 智能选择 AI 服务
+        reply, intent_data = None, None
+        
+        if PREFERRED_AI_PROVIDER == 'doubao' and DOUBAO_API_KEY:
+            # 使用火山引擎豆包
             reply, intent_data = call_doubao_api(full_system_prompt, user_message)
+        elif PREFERRED_AI_PROVIDER == 'qwen' and QWEN_API_KEY:
+            # 使用阿里云通义千问
+            reply, intent_data = call_qwen_api(full_system_prompt, user_message)
         else:
-            # 无 API Key 时使用模拟回复
+            # 无 API Key 或配置错误时使用模拟回复
             reply, intent_data = mock_go_reply(user_message)
         
         print(f"🤖 AI 回复：{reply}")
@@ -4096,6 +4111,87 @@ def call_doubao_api(system_prompt, user_message):
             
     except Exception as e:
         print(f"豆包 API 调用失败：{e}")
+        return mock_go_reply(user_message)
+
+
+def call_qwen_api(system_prompt, user_message):
+    """
+    调用阿里云通义千问 API 进行对话和意图识别
+    （使用兼容模式 v1 接口，格式与 OpenAI API 兼容）
+    
+    Args:
+        system_prompt: 系统提示词
+        user_message: 用户消息
+        
+    Returns:
+        tuple: (ai_reply, intent_data)
+    """
+    try:
+        import requests
+        
+        headers = {
+            "Authorization": f"Bearer {QWEN_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        # 兼容模式 v1 接口格式（与 OpenAI 兼容）
+        enhanced_prompt = f"""{system_prompt}
+
+【重要】请在回复的最后，如果检测到用户有明确的意图（想去某地、想做某事、情绪状态），请用 JSON 格式标注：
+<intent>{{"intent_type": "want_to_visit|want_to_do|mood|other", "location": "地点", "activity": "活动", "mood": "情绪"}}</intent>
+
+如果没有明确意图，不需要添加此标注。
+
+用户消息：{user_message}
+"""
+        
+        payload = {
+            "model": QWEN_MODEL,
+            "messages": [
+                {"role": "system", "content": GO_SYSTEM_PROMPT},
+                {"role": "user", "content": enhanced_prompt}
+            ],
+            "max_tokens": 300,
+            "temperature": 0.8
+        }
+        
+        response = requests.post(
+            QWEN_CHAT_URL,
+            json=payload,
+            headers=headers,
+            timeout=30
+        )
+        
+        if response.status_code == 200:
+            result = response.json()
+            
+            # 提取 AI 回复内容（兼容模式格式）
+            ai_content = ""
+            if 'choices' in result and len(result['choices']) > 0:
+                ai_content = result['choices'][0]['message']['content']
+            
+            # 提取回复内容
+            reply = ai_content.split('<intent>')[0].strip() if '<intent>' in ai_content else ai_content
+            
+            # 提取意图数据
+            intent_data = None
+            if '<intent>' in ai_content:
+                try:
+                    import re
+                    intent_json = re.search(r'<intent>(.*?)</intent>', ai_content, re.DOTALL)
+                    if intent_json:
+                        intent_data = json.loads(intent_json.group(1))
+                except:
+                    pass
+            
+            return reply, intent_data
+        else:
+            print(f"通义千问 API 错误：HTTP {response.status_code}")
+            print(f"响应：{response.text}")
+            return mock_go_reply(user_message)
+            
+    except Exception as e:
+        print(f"通义千问 API 调用失败：{e}")
         return mock_go_reply(user_message)
 
 
