@@ -55,6 +55,25 @@ docs/
 *.md.bak
 *.tmp
 
+# 只保留必要的文档，忽略临时沟通和诊断文档
+# 保留：README.md（项目说明）
+# 忽略其他临时文档
+Vercel*.md
+500*.md
+AssertionError*.md
+GitHub*.md
+PIL*.md
+用户流程优化与升级方案.md
+项目完整文档*.md
+AI 协作者*.md
+清除*.md
+修复*.md
+部署*.md
+诊断*.md
+指南*.md
+方案*.md
+报告*.md
+
 # Test files
 tests/
 test_*.py
