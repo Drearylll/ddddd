@@ -20,12 +20,5 @@
     "DATABASE_URL": "sqlite:///:memory:",
     "FORCE_REBUILD": "20260326_0815",
     "BUILD_ID": "FORCE_REBUILD_PILLOW_FIX_20260326"
-  },
-  "functions": {
-    "app.py": {
-      "maxDuration": 60,
-      "memory": 1024
-    }
-  },
-  "outputDirectory": ""
+  }
 }
