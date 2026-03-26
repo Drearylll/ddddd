@@ -14,7 +14,10 @@
   ],
   "env": {
     "FLASK_ENV": "production",
-    "PYTHON_VERSION": "3.12"
+    "VERCEL": "true",
+    "PYTHON_VERSION": "3.12",
+    "SECRET_KEY": "goin_immersive_mvp_2026_vercel_key",
+    "DATABASE_URL": "sqlite:///:memory:"
   },
   "functions": {
     "app.py": {

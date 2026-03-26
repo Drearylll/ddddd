@@ -1,6 +1,8 @@
 """
 Go In - 沉浸式 MVP
 一个会自己发生的 AI 世界
+
+防御性重构版本 - 确保在 Vercel Serverless 环境下稳定启动
 """
 
 from flask import Flask, render_template_string, render_template, session, redirect, url_for, jsonify, request, make_response
@@ -8,34 +10,94 @@ from datetime import datetime, timedelta
 import random
 import uuid
 import logging
+import os
 
 # 配置日志
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# 导入数据库配置和服务
-from config.db_config import DB_CONFIG
-from services.database import db, init_db, get_or_create_user, save_user_data as db_save_user, get_user_data as db_get_user
-
-# 导入服务层
-from services import ContentGenerator, UserManager
-
 logger.info("🚀 Go In 应用启动中...")
 
+# ========== 防御性导入 - 包裹在 try-except 中 ==========
+
+# 1. 数据库配置
+try:
+    from config.db_config import DB_CONFIG
+    logger.info("✅ 成功导入数据库配置")
+except Exception as e:
+    logger.error(f"❌ 导入数据库配置失败：{str(e)}")
+    DB_CONFIG = {'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:'}
+
+# 2. 数据库模块
+try:
+    from services.database import db, init_db, get_or_create_user, save_user_data as db_save_user, get_user_data as db_get_user
+    logger.info("✅ 成功导入数据库服务")
+except Exception as e:
+    logger.error(f"❌ 导入数据库服务失败：{str(e)}")
+    db = None
+    init_db = None
+    db_save_user = None
+    db_get_user = None
+
+# 3. 服务层模块
+try:
+    from services import ContentGenerator, UserManager
+    logger.info("✅ 成功导入服务层模块")
+except Exception as e:
+    logger.error(f"❌ 导入服务层模块失败：{str(e)}")
+    ContentGenerator = None
+    UserManager = None
+
+# ========== 环境变量安全化 ==========
+SECRET_KEY = os.getenv('SECRET_KEY', 'goin_immersive_mvp_2026_fallback_key')
+VERCEL_ENV = os.getenv('VERCEL', 'false').lower() == 'true'
+
+logger.info(f"🔧 运行环境：VERCEL={VERCEL_ENV}")
+
 app = Flask(__name__)
-app.secret_key = 'goin_immersive_mvp_2026'
+app.secret_key = SECRET_KEY
 
 # 数据库配置
 app.config.update(DB_CONFIG)
 
+# ========== Vercel 环境强制使用内存数据库 ==========
+if VERCEL_ENV:
+    logger.info("🔧 Vercel 环境：强制使用内存数据库")
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 # 立即初始化数据库（在应用启动时）
-logger.info("🔧 开始初始化数据库...")
-init_db(app)
-logger.info("✅ 数据库初始化成功")
+try:
+    logger.info("🔧 开始初始化数据库...")
+    if init_db:
+        init_db(app)
+        logger.info("✅ 数据库初始化成功")
+    else:
+        logger.warning("⚠️ 数据库初始化函数不可用，跳过初始化")
+except Exception as e:
+    logger.error(f"❌ 数据库初始化失败：{str(e)}")
+    logger.warning("⚠️ 应用将继续运行，但数据库功能不可用")
 
 # 无感多用户隔离：服务器端数据存储
 # 使用字典存储所有用户数据，key 为 user_id（作为缓存）
 USER_DATA_STORE = {}
+
+# ========== 调试路由 - 用于诊断 ==========
+@app.route('/debug-status')
+def debug_status():
+    """返回当前加载状态，用于诊断"""
+    status = {
+        'status': 'running',
+        'vercel_env': VERCEL_ENV,
+        'modules': {
+            'db_config': '✅ loaded' if DB_CONFIG else '❌ missing',
+            'database': '✅ loaded' if db else '❌ missing',
+            'services': '✅ loaded' if (ContentGenerator and UserManager) else '❌ missing',
+        },
+        'database_uri': app.config.get('SQLALCHEMY_DATABASE_URI', 'unknown'),
+        'timestamp': datetime.now().isoformat(),
+    }
+    return jsonify(status)
 
 @app.before_request
 def load_user_from_cookie():
