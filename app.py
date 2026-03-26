@@ -3886,7 +3886,8 @@ def api_generate_more_content():
 
 # 火山引擎 - 豆包 API 配置（使用免费额度）
 DOUBAO_API_KEY = os.getenv("DOUBAO_API_KEY", "")
-DOUBAO_API_URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
+DOUBAO_API_URL = "https://ark.cn-beijing.volces.com/api/v3/responses"
+DOUBAO_MODEL = "doubao-seed-2-0-pro-260215"
 
 # Go 的人设 Prompt
 GO_SYSTEM_PROMPT = """你是一个温暖的 AI 朋友，名叫"Go"。
@@ -4017,7 +4018,7 @@ def call_doubao_api(system_prompt, user_message):
             "Content-Type": "application/json"
         }
         
-        # 豆包 API 不支持 function calling，使用 prompt engineering 提取意图
+        # 豆包 API 新版接口格式（使用 input 数组）
         enhanced_prompt = f"""{system_prompt}
 
 【重要】请在回复的最后，如果检测到用户有明确的意图（想去某地、想做某事、情绪状态），请用 JSON 格式标注：
@@ -4029,13 +4030,28 @@ def call_doubao_api(system_prompt, user_message):
 """
         
         payload = {
-            "model": "doubao-lite-4k",  # 使用免费额度模型
-            "messages": [
-                {"role": "system", "content": GO_SYSTEM_PROMPT},
-                {"role": "user", "content": enhanced_prompt}
+            "model": DOUBAO_MODEL,
+            "input": [
+                {
+                    "role": "system",
+                    "content": [
+                        {
+                            "type": "input_text",
+                            "text": GO_SYSTEM_PROMPT
+                        }
+                    ]
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "input_text",
+                            "text": enhanced_prompt
+                        }
+                    ]
+                }
             ],
-            "max_tokens": 300,
-            "temperature": 0.8
+            "max_output_tokens": 300
         }
         
         response = requests.post(
@@ -4047,10 +4063,19 @@ def call_doubao_api(system_prompt, user_message):
         
         if response.status_code == 200:
             result = response.json()
-            ai_content = result['choices'][0]['message']['content']
+            
+            # 提取 AI 回复内容
+            ai_content = ""
+            if 'output' in result and isinstance(result['output'], list):
+                for item in result['output']:
+                    if item.get('type') == 'message' and item.get('role') == 'assistant':
+                        content_list = item.get('content', [])
+                        for content_item in content_list:
+                            if content_item.get('type') == 'output_text':
+                                ai_content += content_item.get('text', '')
             
             # 提取回复内容
-            reply = ai_content.split('<intent>')[0].strip()
+            reply = ai_content.split('<intent>')[0].strip() if '<intent>' in ai_content else ai_content
             
             # 提取意图数据
             intent_data = None
