@@ -454,6 +454,13 @@
             setStatus('正在保存...');
             console.log('发送请求到 /api/profile_setup...');
             
+            // 禁用按钮防止重复点击
+            const saveBtn = document.querySelector('.btn.primary');
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.textContent = '保存中...';
+            }
+            
             try {
                 const response = await fetch('/api/profile_setup', {
                     method: 'POST',
@@ -466,6 +473,18 @@
                 });
                 
                 console.log('响应状态:', response.status);
+                
+                // 关键修复：先检查响应状态
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                // 检查 Content-Type
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    throw new Error('服务器返回了非 JSON 响应');
+                }
+                
                 const data = await response.json();
                 console.log('响应数据:', data);
                 
@@ -486,44 +505,76 @@
                     console.log('   avatar:', finalAvatar ? finalAvatar.substring(0, 50) + '...' : 'null');
                     
                     GoInBrand.showToast('进入主界面');
-                    setTimeout(() => window.location.href = '/app_main', 360);
+                    
+                    // 使用明确的跳转地址
+                    const redirectUrl = data.redirect_url || '/app_main';
+                    setTimeout(() => {
+                        window.location.href = redirectUrl;
+                    }, 360);
                 } else {
                     console.error('❌ API 返回失败:', data);
                     setStatus('保存失败：' + (data.message || '未知错误'));
-                    // 即使失败也尝试跳转
-                    setTimeout(() => window.location.href = '/app_main', 1500);
+                    
+                    // 显示错误提示但不跳转
+                    GoInBrand.showToast(data.message || '保存失败，请重试');
+                    
+                    // 恢复按钮
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                        saveBtn.textContent = '保存并进入主界面';
+                    }
                 }
             } catch (e) {
                 console.error('❌ 请求失败:', e);
+                console.error('错误详情:', e.message);
                 setStatus('请求错误：' + e.message);
-                // 即使失败也尝试跳转
-                setTimeout(() => window.location.href = '/app_main', 1500);
+                
+                // 显示详细错误信息
+                GoInBrand.showToast('网络错误：' + e.message);
+                
+                // 恢复按钮
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = '保存并进入主界面';
+                }
             }
         }
 
         async function skipProfileSetup() {
-            if (confirm('确定要跳过头像设置吗？\n\n你将使用默认头像进入主界面。')) {
-                localStorage.setItem('goIn_profile_completed', 'true');
-                localStorage.setItem('goIn_gender', 'other');
-                
-                setStatus('正在跳过...');
-                try {
-                    await fetch('/api/profile_setup', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            gender: 'other',
-                            face_photo_data_url: '',
-                            face_avatar_data_url: ''
-                        })
-                    });
-                } catch (e) {
-                    // 忽略错误
-                }
-                
-                GoInBrand.showToast('已跳过，进入主界面');
-                setTimeout(() => window.location.href = '/app_main', 360);
+            // 使用更友好的确认对话框
+            const skipConfirm = confirm('确定要跳过头像设置吗？\n\n你将使用默认头像进入主界面。');
+            
+            if (!skipConfirm) {
+                return; // 用户取消，不跳转
             }
+            
+            localStorage.setItem('goIn_profile_completed', 'true');
+            localStorage.setItem('goIn_gender', 'other');
+            
+            setStatus('正在跳过...');
+            
+            try {
+                const response = await fetch('/api/profile_setup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        gender: 'other',
+                        face_photo_data_url: '',
+                        face_avatar_data_url: ''
+                    })
+                });
+                
+                // 不等待响应，直接跳转
+                console.log('已发送跳过请求');
+            } catch (e) {
+                // 忽略错误，直接跳转
+                console.log('跳过请求失败，但仍将跳转');
+            }
+            
+            GoInBrand.showToast('已跳过，进入主界面');
+            setTimeout(() => {
+                window.location.href = '/app_main';
+            }, 360);
         }
 
         function setStatus(text) {

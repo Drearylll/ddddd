@@ -3007,13 +3007,23 @@ def profile_setup():
 def api_profile_setup():
     """API: 保存用户性别与唯一头像（绑定全站 AI 脸）"""
     try:
+        # 确保 request.json 存在
+        if not request.is_json:
+            return jsonify({
+                'success': False,
+                'message': 'Content-Type must be application/json'
+            }), 400
+            
         data = request.json or {}
         gender = data.get('gender')
         face_photo_data_url = data.get('face_photo_data_url')
         face_avatar_data_url = data.get('face_avatar_data_url')
 
         if not gender or not face_photo_data_url or not face_avatar_data_url:
-            return jsonify({'success': False, 'message': '参数不完整'}), 400
+            return jsonify({
+                'success': False,
+                'message': '参数不完整：需要 gender, face_photo_data_url, face_avatar_data_url'
+            }), 400
 
         # 保存到 Session
         session['go_gender'] = gender
@@ -3042,12 +3052,23 @@ def api_profile_setup():
         print(f"✅ 用户头像设置完成：gender={gender}, profile_completed=True, user_id={user_id[:8]}...")
         
         # 设置 Cookie 持久化用户 ID
-        response = make_response(jsonify({'success': True, 'user_id': user_id}))
+        response = make_response(jsonify({
+            'success': True,
+            'user_id': user_id,
+            'redirect_url': '/app_main'  # 明确指定跳转地址
+        }))
         response.set_cookie('user_id', user_id, max_age=31536000)  # 1 年
         return response
+        
     except Exception as e:
         print(f"❌ 保存头像信息失败：{e}")
-        return jsonify({'success': False, 'message': str(e)}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': f'服务器错误：{str(e)}',
+            'redirect_url': '/profile_setup'  # 失败时留在当前页
+        }), 500
 
 @app.route('/personality_customization')
 def personality_customization():
