@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>逛逛 - Go In</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+        
+        /* 顶部导航 */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        
+        .header-logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        /* 主容器 */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 80px 16px 20px;
+        }
+        
+        /* 瀑布流布局 */
+        .masonry-grid {
+            column-count: 2;
+            column-gap: 12px;
+        }
+        
+        @media (max-width: 480px) {
+            .masonry-grid {
+                column-count: 1;
+            }
+        }
+        
+        /* 打卡卡片 */
+        .moment-card {
+            break-inside: avoid;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease;
+        }
+        
+        .moment-card:hover {
+            transform: translateY(-4px);
+        }
+        
+        /* 卡片图片 */
+        .moment-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        /* 卡片内容 */
+        .moment-content {
+            padding: 12px;
+        }
+        
+        .moment-caption {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .moment-location {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+        
+        .location-icon {
+            margin-right: 4px;
+            font-size: 14px;
+        }
+        
+        .moment-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        .moment-time {
+            font-size: 11px;
+            color: #999;
+        }
+        
+        .moment-action {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #666;
+            transition: color 0.2s;
+        }
+        
+        .action-btn:hover {
+            color: #667eea;
+        }
+        
+        .action-btn.liked {
+            color: #ff4757;
+        }
+        
+        /* 加载状态 */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 16px;
+        }
+        
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+        
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+        
+        .empty-state-text {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        
+        .empty-state-subtext {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        /* 底部导航栏 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #999;
+            font-size: 12px;
+            transition: color 0.2s;
+        }
+        
+        .nav-item.active {
+            color: #667eea;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        
+        /* 生成按钮 */
+        .generate-fab {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+            transition: transform 0.3s;
+            z-index: 999;
+        }
+        
+        .generate-fab:hover {
+            transform: scale(1.1);
+        }
+        
+        .generate-fab:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <div class="header">
+        <div class="header-logo">GO IN</div>
+    </div>
+    
+    <!-- 主容器 -->
+    <div class="container">
+        <!-- 加载中 -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <div>正在加载你的平行世界...</div>
+        </div>
+        
+        <!-- 空状态 -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <div class="empty-state-icon">🌟</div>
+            <div class="empty-state-text">还没有任何内容</div>
+            <div class="empty-state-subtext">点击下方按钮，生成你的第一个平行世界影像</div>
+        </div>
+        
+        <!-- 瀑布流卡片 -->
+        <div id="masonryGrid" class="masonry-grid" style="display: none;"></div>
+    </div>
+    
+    <!-- 生成按钮 -->
+    <button id="generateFab" class="generate-fab" onclick="generateNewMoment()">+</button>
+    
+    <!-- 底部导航 -->
+    <div class="bottom-nav">
+        <a href="/app_main" class="nav-item">
+            <span class="nav-icon">🏠</span>
+            <span>首页</span>
+        </a>
+        <a href="/explore" class="nav-item active">
+            <span class="nav-icon">🌍</span>
+            <span>逛逛</span>
+        </a>
+        <a href="/co_create" class="nav-item">
+            <span class="nav-icon">✨</span>
+            <span>共创</span>
+        </a>
+        <a href="/profile" class="nav-item">
+            <span class="nav-icon">👤</span>
+            <span>我的</span>
+        </a>
+    </div>
+    
+    <script>
+        let currentPage = 1;
+        const limit = 10;
+        let isLoading = false;
+        let hasMore = true;
+        
+        // 页面加载时获取 Feed 流
+        window.addEventListener('DOMContentLoaded', () => {
+            loadMoments();
+            
+            // 滚动加载更多
+            window.addEventListener('scroll', () => {
+                if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 500 && !isLoading && hasMore) {
+                    currentPage++;
+                    loadMoments();
+                }
+            });
+        });
+        
+        // 加载逛逛内容
+        async function loadMoments() {
+            if (isLoading) return;
+            
+            isLoading = true;
+            showLoading();
+            
+            try {
+                const response = await fetch(`/api/explore_feed?page=${currentPage}&limit=${limit}`);
+                const data = await response.json();
+                
+                if (data.success && data.moments.length > 0) {
+                    renderMoments(data.moments);
+                    hasMore = data.has_more;
+                    
+                    // 隐藏空状态和加载状态
+                    document.getElementById('emptyState').style.display = 'none';
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('masonryGrid').style.display = 'block';
+                } else if (currentPage === 1) {
+                    // 第一页且没有数据，显示空状态
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error('加载失败:', error);
+                showToast('加载失败，请稍后重试');
+            } finally {
+                isLoading = false;
+            }
+        }
+        
+        // 渲染卡片
+        function renderMoments(moments) {
+            const grid = document.getElementById('masonryGrid');
+            
+            moments.forEach(moment => {
+                const card = createMomentCard(moment);
+                grid.appendChild(card);
+            });
+        }
+        
+        // 创建卡片
+        function createMomentCard(moment) {
+            const card = document.createElement('div');
+            card.className = 'moment-card';
+            
+            const timeAgo = getTimeAgo(new Date(moment.timestamp));
+            
+            card.innerHTML = `
+                <img src="${moment.image_url}" alt="打卡照片" class="moment-image" loading="lazy">
+                <div class="moment-content">
+                    <div class="moment-caption">${escapeHtml(moment.caption)}</div>
+                    <div class="moment-location">
+                        <span class="location-icon">📍</span>
+                        <span>${escapeHtml(moment.location_name)}</span>
+                    </div>
+                    <div class="moment-meta">
+                        <span class="moment-time">${timeAgo}</span>
+                        <div class="moment-action">
+                            <button class="action-btn" onclick="toggleLike(this)">❤️</button>
+                            <button class="action-btn" onclick="shareMoment('${moment.id}')">📤</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        // 生成新内容
+        async function generateNewMoment() {
+            // 禁用按钮防止重复点击
+            const fab = document.getElementById('generateFab');
+            fab.disabled = true;
+            fab.textContent = '...';
+            
+            showToast('正在绘制你的平行世界...', 3000);
+            
+            try {
+                const response = await fetch('/api/generate_moment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        action_type: getRandomActionType()
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast('✨ 平行世界影像已生成！');
+                    
+                    // 刷新页面或添加到列表顶部
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showToast(data.message || '生成失败');
+                    fab.disabled = false;
+                    fab.textContent = '+';
+                }
+            } catch (error) {
+                console.error('生成失败:', error);
+                showToast('网络错误，请稍后重试');
+                fab.disabled = false;
+                fab.textContent = '+';
+            }
+        }
+        
+        // 随机选择动作类型
+        function getRandomActionType() {
+            const types = ['fitness', 'learning', 'culture', 'relaxation', 'nature', 'dining'];
+            return types[Math.floor(Math.random() * types.length)];
+        }
+        
+        // 点赞
+        function toggleLike(btn) {
+            btn.classList.toggle('liked');
+        }
+        
+        // 分享
+        function shareMoment(momentId) {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Go In - 我的平行世界',
+                    text: '来看看我的另一个可能生活',
+                    url: window.location.href
+                });
+            } else {
+                showToast('已复制到剪贴板');
+            }
+        }
+        
+        // 工具函数
+        function showLoading() {
+            const loading = document.getElementById('loading');
+            if (currentPage === 1) {
+                loading.style.display = 'block';
+            }
+        }
+        
+        function showEmptyState() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+            document.getElementById('masonryGrid').style.display = 'none';
+        }
+        
+        function showToast(message, duration = 2000) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 80px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 24px;
+                font-size: 14px;
+                z-index: 2000;
+                animation: fadeIn 0.3s;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diff = Math.floor((now - date) / 1000); // 秒
+            
+            if (diff < 60) return '刚刚';
+            if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`;
+            if (diff < 604800) return `${Math.floor(diff / 86400)}天前`;
+            
+            return date.toLocaleDateString('zh-CN');
+        }
+    </script>
+</body>
+</html>

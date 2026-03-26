@@ -3070,6 +3070,285 @@ def api_profile_setup():
             'redirect_url': '/profile_setup'  # 失败时留在当前页
         }), 500
 
+# ============================================
+# 1.0 核心功能：独一无二的专属风格人脸
+# ============================================
+
+@app.route('/api/upload_face', methods=['POST'])
+def api_upload_face():
+    """
+    API: 上传人脸照片并生成专属风格头像
+    
+    Request:
+        - file: 图片文件
+        
+    Response:
+        - success: bool
+        - face_image_url: str
+        - seed: str (唯一性密钥)
+        - message: str
+    """
+    try:
+        from services.unique_face import get_face_generator
+        
+        # 获取用户 ID
+        user_id = session.get('user_id')
+        if not user_id:
+            # 尝试从 Cookie 获取
+            user_id = request.cookies.get('user_id')
+        
+        if not user_id:
+            return jsonify({
+                'success': False,
+                'message': '请先登录或注册'
+            }), 401
+        
+        # 检查是否有上传文件
+        if 'file' not in request.files:
+            return jsonify({
+                'success': False,
+                'message': '请上传图片文件'
+            }), 400
+        
+        file = request.files['file']
+        
+        if file.filename == '':
+            return jsonify({
+                'success': False,
+                'message': '未选择文件'
+            }), 400
+        
+        # 验证文件类型
+        allowed_extensions = {'png', 'jpg', 'jpeg'}
+        if '.' not in file.filename or file.filename.rsplit('.', 1)[1].lower() not in allowed_extensions:
+            return jsonify({
+                'success': False,
+                'message': '仅支持 PNG、JPG 格式'
+            }), 400
+        
+        print(f"📸 为用户 {user_id} 处理上传照片...")
+        
+        # 调用专属人脸生成服务
+        face_generator = get_face_generator()
+        result = face_generator.generate_unique_face(user_id, file)
+        
+        if result.get('success'):
+            # 保存头像信息到数据库
+            user_manager = UserManager()
+            user_data = user_manager.get_user_data()
+            
+            # 更新用户数据
+            user_data['face_photo'] = result['face_image_url']
+            user_data['face_avatar'] = result['face_image_url']  # 暂时使用同一张图
+            user_manager.save_user_data(user_data)
+            
+            print(f"✅ 专属头像生成成功：{result['face_image_url']}")
+            
+            return jsonify({
+                'success': True,
+                'face_image_url': result['face_image_url'],
+                'seed': result.get('seed', ''),
+                'message': result.get('message', '头像生成成功！')
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': result.get('message', '生成失败')
+            }), 500
+            
+    except Exception as e:
+        print(f"❌ 上传人脸照片失败：{e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': f'服务器错误：{str(e)}'
+        }), 500
+
+# ============================================
+# 1.0 核心功能：基于 LBS 的现实镜像与引导
+# ============================================
+
+@app.route('/api/generate_moment', methods=['POST'])
+def api_generate_moment():
+    """
+    API: 生成虚实融合的打卡内容
+    
+    Request:
+        - lat: float (可选，默认上海人民广场)
+        - lon: float (可选)
+        - action_type: str (fitness, learning, culture, relaxation, nature, dining)
+        
+    Response:
+        - success: bool
+        - moment: {
+            - image_url: str (融合后的图片)
+            - caption: str (引导性文案)
+            - location_name: str
+            - location_type: str
+            - lat: float
+            - lng: float
+          }
+    """
+    try:
+        from services.reality_mirror import get_reality_mirror
+        from services.fusion_composer import get_fusion_composer
+        
+        data = request.get_json() or {}
+        
+        # 获取位置信息（优先从请求中获取，否则使用默认位置）
+        lat = data.get('lat', 31.230416)
+        lon = data.get('lon', 121.473701)
+        action_type = data.get('action_type', 'relaxation')
+        
+        print(f"🌍 生成打卡内容：lat={lat}, lon={lon}, action={action_type}")
+        
+        # ========== 步骤 1：获取附近真实地点 ==========
+        reality_mirror = get_reality_mirror()
+        places = reality_mirror.get_nearby_real_places(lat, lon, limit=3)
+        
+        if not places:
+            return jsonify({
+                'success': False,
+                'message': '附近暂无合适的地点'
+            }), 404
+        
+        # 选择一个地点（随机或根据算法）
+        selected_place = random.choice(places)
+        print(f"📍 选择地点：{selected_place['name']}")
+        
+        # ========== 步骤 2：生成引导性文案 ==========
+        user_manager = UserManager()
+        user_data = user_manager.get_user_data()
+        
+        caption_data = reality_mirror.generate_nudge_caption(
+            place_type=selected_place['type'],
+            user_profile=user_data,
+            place_name=selected_place['name']
+        )
+        
+        print(f"💬 生成文案：{caption_data['caption']}")
+        
+        # ========== 步骤 3：获取用户专属人脸 ==========
+        face_image_path = user_data.get('face_photo', '')
+        if not face_image_path:
+            return jsonify({
+                'success': False,
+                'message': '请先创建专属头像'
+            }), 400
+        
+        # ========== 步骤 4：虚实融合 ==========
+        fusion_composer = get_fusion_composer()
+        fused_result = fusion_composer.generate_fused_scene(
+            face_image_path=face_image_path,
+            location_photo_url=selected_place['image_url'],
+            action_type=action_type,
+            user_profile=user_data
+        )
+        
+        if not fused_result.get('success'):
+            return jsonify({
+                'success': False,
+                'message': fused_result.get('message', '融合失败')
+            }), 500
+        
+        print(f"✨ 融合完成：{fused_result['fused_image_url']}")
+        
+        # ========== 步骤 5：组装返回结果 ==========
+        moment = {
+            'image_url': fused_result['fused_image_url'],
+            'caption': caption_data['caption'],
+            'mood': caption_data['mood'],
+            'location_name': selected_place['name'],
+            'location_type': selected_place['type'],
+            'address': selected_place['address'],
+            'lat': selected_place['lat'],
+            'lng': selected_place['lng'],
+            'distance': selected_place.get('distance', 0),
+            'walk_time': selected_place.get('walk_time', '未知'),
+            'action_type': action_type,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        return jsonify({
+            'success': True,
+            'moment': moment,
+            'message': '平行世界影像已生成！'
+        })
+        
+    except Exception as e:
+        print(f"❌ 生成打卡内容失败：{e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': f'服务器错误：{str(e)}'
+        }), 500
+
+# ============================================
+# 逛逛页面路由
+# ============================================
+
+@app.route('/explore')
+def explore():
+    """【逛逛】页面 - 展示虚实融合的打卡内容"""
+    user_data = get_user_data()
+    
+    # 检查是否完成人格定制
+    onboarding_completed = user_data.get('onboarding_completed', False)
+    personality_completed = user_data.get('personality_customization_completed', False)
+    
+    if not onboarding_completed:
+        return redirect(url_for('onboarding'))
+    
+    # 进入主界面前必须完成头像建立
+    if not user_data.get('go_profile_completed', False):
+        return redirect(url_for('profile_setup'))
+    
+    return render_template('explore.html')
+
+@app.route('/api/explore_feed', methods=['GET'])
+def api_explore_feed():
+    """
+    API: 获取逛逛 Feed 流内容
+    
+    Query Parameters:
+        - page: int (页码)
+        - limit: int (每页数量)
+        
+    Response:
+        - success: bool
+        - moments: List[Dict] (打卡内容列表)
+        - has_more: bool
+    """
+    try:
+        from services.moments_service import MomentsService
+        
+        page = request.args.get('page', 1, type=int)
+        limit = request.args.get('limit', 10, type=int)
+        
+        user_data = get_user_data()
+        user_id = user_data.get('user_id')
+        
+        # 使用逛逛服务获取内容
+        moments_service = MomentsService()
+        moments = moments_service.get_moments_feed(user_id, page, limit)
+        
+        return jsonify({
+            'success': True,
+            'moments': moments,
+            'has_more': len(moments) == limit,
+            'page': page,
+            'total': len(moments)
+        })
+        
+    except Exception as e:
+        print(f"❌ 获取逛逛 Feed 失败：{e}")
+        return jsonify({
+            'success': False,
+            'message': f'服务器错误：{str(e)}'
+        }), 500
+
 @app.route('/personality_customization')
 def personality_customization():
     """人格定制界面 - AI 形象 + 语音"""
